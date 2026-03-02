@@ -10,6 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var store: TaskStore?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
         setupMenuBar()
     }
 
@@ -43,15 +44,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openMainWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0 !== quickAddPanel && !($0 is NSPanel) }) {
-            window.makeKeyAndOrderFront(nil)
-        }
+        NSApp.activate()
+        NSApp.windows.first(where: { !($0 is NSPanel) })?.makeKeyAndOrderFront(nil)
     }
 
     @objc private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        openMainWindow()
+        NotificationCenter.default.post(name: .showSettingsPage, object: nil)
     }
 
     // MARK: - Global Hotkey

@@ -36,7 +36,6 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 450)
     }
 
     private func browseForFile(current: String, completion: @escaping (String) -> Void) {

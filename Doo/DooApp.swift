@@ -37,8 +37,5 @@ struct DooApp: App {
             }
         }
 
-        Settings {
-            SettingsView()
-        }
     }
 }
