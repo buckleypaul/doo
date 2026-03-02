@@ -27,7 +27,7 @@ enum DateFormatting {
         date.formatted(date: .abbreviated, time: .shortened)
     }
 
-    static func isOverdue(_ date: Date) -> Bool {
+    nonisolated static func isOverdue(_ date: Date) -> Bool {
         Calendar.current.startOfDay(for: date) < Calendar.current.startOfDay(for: Date())
     }
 }
