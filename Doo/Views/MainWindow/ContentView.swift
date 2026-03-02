@@ -21,7 +21,12 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             List(SidebarItem.allCases, selection: $selection) { item in
-                Label(item.rawValue, systemImage: item.icon)
+                Label {
+                    Text(item.rawValue)
+                } icon: {
+                    Image(systemName: item.icon)
+                }
+                .badge(badgeCount(for: item))
             }
             .navigationSplitViewColumnWidth(min: 140, ideal: 160)
         } detail: {
@@ -36,6 +41,14 @@ struct ContentView: View {
                 Text("Select a section")
                     .foregroundStyle(.secondary)
             }
+        }
+        .frame(minWidth: 600, minHeight: 400)
+    }
+
+    private func badgeCount(for item: SidebarItem) -> Int {
+        switch item {
+        case .todo: store.activeTasks.count
+        case .done: store.completedTasks.count
         }
     }
 }

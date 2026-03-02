@@ -3,6 +3,7 @@ import SwiftUI
 struct TodoListView: View {
     @Bindable var store: TaskStore
     @State private var filterState = FilterState()
+    @State private var taskToDelete: DooTask?
 
     private var filteredTasks: [DooTask] {
         filterState.apply(to: store.activeTasks)
@@ -33,11 +34,26 @@ struct TodoListView: View {
                                 TaskDetailView(store: store, task: $store.activeTasks[index])
                             } label: {
                                 TaskRowView(task: task) {
-                                    withAnimation {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
                                         store.completeTask(task)
                                     }
                                 }
                             }
+                            .contextMenu {
+                                Button("Complete") {
+                                    withAnimation { store.completeTask(task) }
+                                }
+                                Divider()
+                                Button("Delete", role: .destructive) {
+                                    taskToDelete = task
+                                }
+                            }
+                        }
+                    }
+                    .onDelete { indexSet in
+                        for index in indexSet {
+                            let task = filteredTasks[index]
+                            taskToDelete = task
                         }
                     }
                 }
@@ -47,10 +63,28 @@ struct TodoListView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     let newTask = DooTask(title: "New Task")
-                    store.addTask(newTask)
+                    withAnimation {
+                        store.addTask(newTask)
+                    }
                 } label: {
                     Label("Add Task", systemImage: "plus")
                 }
+            }
+        }
+        .alert("Delete Task?", isPresented: Binding(
+            get: { taskToDelete != nil },
+            set: { if !$0 { taskToDelete = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { taskToDelete = nil }
+            Button("Delete", role: .destructive) {
+                if let task = taskToDelete {
+                    withAnimation { store.deleteTask(task) }
+                    taskToDelete = nil
+                }
+            }
+        } message: {
+            if let task = taskToDelete {
+                Text("Are you sure you want to delete \"\(task.title)\"?")
             }
         }
     }

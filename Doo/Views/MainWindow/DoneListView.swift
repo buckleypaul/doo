@@ -3,6 +3,7 @@ import SwiftUI
 struct DoneListView: View {
     @Bindable var store: TaskStore
     @State private var filterState = FilterState(sortOption: .dateCompleted)
+    @State private var taskToDelete: DooTask?
 
     private var filteredTasks: [DooTask] {
         filterState.apply(to: store.completedTasks)
@@ -33,14 +34,45 @@ struct DoneListView: View {
                                 TaskDetailView(store: store, task: $store.completedTasks[index])
                             } label: {
                                 TaskRowView(task: task) {
-                                    withAnimation {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
                                         store.uncompleteTask(task)
                                     }
                                 }
                             }
+                            .contextMenu {
+                                Button("Restore to Todo") {
+                                    withAnimation { store.uncompleteTask(task) }
+                                }
+                                Divider()
+                                Button("Delete", role: .destructive) {
+                                    taskToDelete = task
+                                }
+                            }
+                        }
+                    }
+                    .onDelete { indexSet in
+                        for index in indexSet {
+                            let task = filteredTasks[index]
+                            taskToDelete = task
                         }
                     }
                 }
+            }
+        }
+        .alert("Delete Task?", isPresented: Binding(
+            get: { taskToDelete != nil },
+            set: { if !$0 { taskToDelete = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { taskToDelete = nil }
+            Button("Delete", role: .destructive) {
+                if let task = taskToDelete {
+                    withAnimation { store.deleteTask(task) }
+                    taskToDelete = nil
+                }
+            }
+        } message: {
+            if let task = taskToDelete {
+                Text("Are you sure you want to delete \"\(task.title)\"?")
             }
         }
     }

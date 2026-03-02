@@ -28,6 +28,15 @@ struct DooApp: App {
                 }
         }
 
+        .commands {
+            CommandGroup(after: .newItem) {
+                Button("Quick Add Task") {
+                    appDelegate.toggleQuickAdd()
+                }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+            }
+        }
+
         Settings {
             SettingsView()
         }
