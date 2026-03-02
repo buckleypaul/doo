@@ -1,0 +1,96 @@
+import Foundation
+
+struct DooTask: Codable, Identifiable, Equatable {
+    var id: UUID
+    var title: String
+    var description: String?
+    var notes: String?
+    var priority: Int
+    var tags: [String]
+    var dueDate: Date?
+    var dateAdded: Date
+    var dateCompleted: Date?
+    var subtasks: [Subtask]
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        description: String? = nil,
+        notes: String? = nil,
+        priority: Int = 3,
+        tags: [String] = [],
+        dueDate: Date? = nil,
+        dateAdded: Date = Date(),
+        dateCompleted: Date? = nil,
+        subtasks: [Subtask] = []
+    ) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.notes = notes
+        self.priority = priority
+        self.tags = tags
+        self.dueDate = dueDate
+        self.dateAdded = dateAdded
+        self.dateCompleted = dateCompleted
+        self.subtasks = subtasks
+    }
+}
+
+struct TaskFile: Codable {
+    var tasks: [DooTask]
+}
+
+extension DooTask {
+    /// Custom date coding: dueDate uses yyyy-MM-dd, dateAdded/dateCompleted use ISO8601 with seconds
+    enum CodingKeys: String, CodingKey {
+        case id, title, description, notes, priority, tags
+        case dueDate, dateAdded, dateCompleted, subtasks
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 3
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        subtasks = try container.decodeIfPresent([Subtask].self, forKey: .subtasks) ?? []
+        dateAdded = try container.decode(Date.self, forKey: .dateAdded)
+        dateCompleted = try container.decodeIfPresent(Date.self, forKey: .dateCompleted)
+
+        // dueDate is date-only string "yyyy-MM-dd"
+        if let dueDateString = try container.decodeIfPresent(String.self, forKey: .dueDate) {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            dueDate = formatter.date(from: dueDateString)
+        } else {
+            dueDate = nil
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encodeIfPresent(notes, forKey: .notes)
+        try container.encode(priority, forKey: .priority)
+        try container.encode(tags, forKey: .tags)
+        try container.encode(dateAdded, forKey: .dateAdded)
+        try container.encodeIfPresent(dateCompleted, forKey: .dateCompleted)
+        try container.encodeIfPresent(subtasks.isEmpty ? nil : subtasks, forKey: .subtasks)
+
+        // dueDate as date-only string
+        if let dueDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            try container.encode(formatter.string(from: dueDate), forKey: .dueDate)
+        } else {
+            try container.encodeIfPresent(String?.none, forKey: .dueDate)
+        }
+    }
+}

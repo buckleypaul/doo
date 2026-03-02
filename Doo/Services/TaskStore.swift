@@ -1,0 +1,196 @@
+import Foundation
+import Observation
+
+@MainActor
+@Observable
+class TaskStore {
+    var activeTasks: [DooTask] = []
+    var completedTasks: [DooTask] = []
+
+    private var todoFileURL: URL
+    private var doneFileURL: URL
+    private var todoWatcherSource: DispatchSourceFileSystemObject?
+    private var doneWatcherSource: DispatchSourceFileSystemObject?
+    private var debounceWorkItem: DispatchWorkItem?
+    private var isSaving = false
+
+    init(todoPath: String? = nil, donePath: String? = nil) {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        self.todoFileURL = URL(fileURLWithPath: todoPath ?? home.appendingPathComponent("doo-todo.json").path)
+        self.doneFileURL = URL(fileURLWithPath: donePath ?? home.appendingPathComponent("doo-done.json").path)
+        loadAll()
+        startWatching()
+    }
+
+    // MARK: - CRUD
+
+    func addTask(_ task: DooTask) {
+        activeTasks.insert(task, at: 0)
+        saveTodoFile()
+    }
+
+    func completeTask(_ task: DooTask) {
+        guard let index = activeTasks.firstIndex(where: { $0.id == task.id }) else { return }
+        var completed = activeTasks.remove(at: index)
+        completed.dateCompleted = Date()
+        completedTasks.insert(completed, at: 0)
+        saveTodoFile()
+        saveDoneFile()
+    }
+
+    func uncompleteTask(_ task: DooTask) {
+        guard let index = completedTasks.firstIndex(where: { $0.id == task.id }) else { return }
+        var restored = completedTasks.remove(at: index)
+        restored.dateCompleted = nil
+        activeTasks.insert(restored, at: 0)
+        saveTodoFile()
+        saveDoneFile()
+    }
+
+    func updateTask(_ task: DooTask) {
+        if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
+            activeTasks[index] = task
+            saveTodoFile()
+        } else if let index = completedTasks.firstIndex(where: { $0.id == task.id }) {
+            completedTasks[index] = task
+            saveDoneFile()
+        }
+    }
+
+    func deleteTask(_ task: DooTask) {
+        if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
+            activeTasks.remove(at: index)
+            saveTodoFile()
+        } else if let index = completedTasks.firstIndex(where: { $0.id == task.id }) {
+            completedTasks.remove(at: index)
+            saveDoneFile()
+        }
+    }
+
+    // MARK: - File Path Updates
+
+    func updatePaths(todoPath: String, donePath: String) {
+        stopWatching()
+        todoFileURL = URL(fileURLWithPath: todoPath)
+        doneFileURL = URL(fileURLWithPath: donePath)
+        loadAll()
+        startWatching()
+    }
+
+    // MARK: - File I/O
+
+    private func loadAll() {
+        activeTasks = loadTasks(from: todoFileURL)
+        completedTasks = loadTasks(from: doneFileURL)
+    }
+
+    private func loadTasks(from url: URL) -> [DooTask] {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return []
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let taskFile = try decoder.decode(TaskFile.self, from: data)
+            return taskFile.tasks
+        } catch {
+            print("Failed to load \(url.lastPathComponent): \(error)")
+            return []
+        }
+    }
+
+    private func saveTodoFile() {
+        saveTasksAtomically(activeTasks, to: todoFileURL)
+    }
+
+    private func saveDoneFile() {
+        saveTasksAtomically(completedTasks, to: doneFileURL)
+    }
+
+    private func saveTasksAtomically(_ tasks: [DooTask], to url: URL) {
+        isSaving = true
+        defer {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                self?.isSaving = false
+            }
+        }
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+        do {
+            let taskFile = TaskFile(tasks: tasks)
+            let data = try encoder.encode(taskFile)
+
+            // Atomic write: write to temp file then rename
+            let tempURL = url.deletingLastPathComponent()
+                .appendingPathComponent(".\(url.lastPathComponent).tmp")
+            try data.write(to: tempURL)
+            _ = try FileManager.default.replaceItemAt(url, withItemAt: tempURL)
+        } catch {
+            print("Failed to save \(url.lastPathComponent): \(error)")
+        }
+    }
+
+    // MARK: - File Watching
+
+    private func startWatching() {
+        watchFile(at: todoFileURL) { [weak self] in
+            self?.activeTasks = self?.loadTasks(from: self!.todoFileURL) ?? []
+        }
+        watchFile(at: doneFileURL) { [weak self] in
+            self?.completedTasks = self?.loadTasks(from: self!.doneFileURL) ?? []
+        }
+    }
+
+    private func watchFile(at url: URL, onChange: @escaping @Sendable @MainActor () -> Void) {
+        // Ensure file exists so we can open a descriptor
+        if !FileManager.default.fileExists(atPath: url.path) {
+            let emptyData = "{\"tasks\":[]}".data(using: .utf8)!
+            try? emptyData.write(to: url)
+        }
+
+        let fd = open(url.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: [.write, .rename],
+            queue: .main
+        )
+
+        source.setEventHandler { [weak self] in
+            guard let self, !self.isSaving else { return }
+            // Debounce: wait 100ms for rapid changes
+            self.debounceWorkItem?.cancel()
+            let work = DispatchWorkItem {
+                Task { @MainActor in
+                    onChange()
+                }
+            }
+            self.debounceWorkItem = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: work)
+        }
+
+        source.setCancelHandler {
+            close(fd)
+        }
+
+        source.resume()
+
+        if url == todoFileURL {
+            todoWatcherSource = source
+        } else {
+            doneWatcherSource = source
+        }
+    }
+
+    private func stopWatching() {
+        todoWatcherSource?.cancel()
+        todoWatcherSource = nil
+        doneWatcherSource?.cancel()
+        doneWatcherSource = nil
+    }
+}
