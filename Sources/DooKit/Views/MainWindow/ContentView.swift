@@ -1,13 +1,13 @@
 import SwiftUI
 
-enum SidebarItem: String, CaseIterable, Identifiable {
+public enum SidebarItem: String, CaseIterable, Identifiable {
     case todo = "Todo"
     case done = "Done"
     case settings = "Settings"
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 
-    var icon: String {
+    public var icon: String {
         switch self {
         case .todo: "checklist"
         case .done: "checkmark.circle"
@@ -17,14 +17,18 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 }
 
 extension Notification.Name {
-    static let showSettingsPage = Notification.Name("DooShowSettingsPage")
+    public static let showSettingsPage = Notification.Name("DooShowSettingsPage")
 }
 
-struct ContentView: View {
+public struct ContentView: View {
     @State var store: TaskStore
     @State private var selection: SidebarItem? = .todo
 
-    var body: some View {
+    public init(store: TaskStore) {
+        _store = State(initialValue: store)
+    }
+
+    public var body: some View {
         NavigationSplitView {
             List(SidebarItem.allCases, selection: $selection) { item in
                 Label {

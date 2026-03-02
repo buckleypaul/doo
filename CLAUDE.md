@@ -1,36 +1,60 @@
 # Doo
 
-macOS 15+ todo app. Swift 6 / SwiftUI. Local JSON storage, no tests.
+macOS 15+ todo app. Swift 6 / SwiftUI. Local JSON storage.
 
 ## Commands
 
 ```bash
 swift build -c release          # release build → .build/release/Doo
 swift run                        # dev run
+swift test                       # run all 55 tests
+swift test --filter DooTests.InlineSyntaxParserTests  # single suite
 ```
 
-No test suite exists.
+If `xcode-select -p` points to Command Line Tools (not Xcode), prefix with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` or run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` once.
+
+## Testing policy
+
+**All features and bug fixes must include tests.** Add tests to the appropriate file under `Tests/DooTests/`:
+
+- New parsing behaviour → `InlineSyntaxParserTests`
+- Model changes or new Codable fields → `DooTaskCodableTests` / `SubtaskCodableTests`
+- Filter / sort logic → `FilterStateTests`
+- CRUD or persistence → `TaskStoreTests`
+- Date formatting → `DateFormattingTests`
+
+Run `swift test` and confirm all tests pass before considering any change complete.
 
 ## Architecture
 
 ```
-Doo/
-  DooApp.swift          # @main — wires TaskStore → ContentView → AppDelegate
-  AppDelegate.swift     # menu bar item, global hotkey (Option+Space)
-  Models/
-    DooTask.swift       # Codable task struct (custom date coding)
-    Subtask.swift
-  Services/
-    TaskStore.swift     # @Observable — CRUD, atomic file writes, DispatchSource file watching
-    SettingsManager.swift  # @Observable — UserDefaults-backed, file paths + hotkey + launch-at-login
-    InlineSyntaxParser.swift  # parses "title !N #tag @date /description" → DooTask
-  Views/
-    MainWindow/         # ContentView (sidebar Todo/Done), TodoListView, DoneListView, TaskRowView, TaskDetailView
-    QuickAdd/           # QuickAddPanel (NSPanel), QuickAddView
-    Settings/           # SettingsView
-  Utilities/
-    DateFormatting.swift
+Sources/
+  Doo/                    # Thin executable (2 files)
+    DooApp.swift           # @main — wires TaskStore → ContentView → AppDelegate
+    AppDelegate.swift      # menu bar item, global hotkey (Option+Space)
+  DooKit/                  # Library target (all business logic + views)
+    Models/
+      DooTask.swift        # Codable task struct (custom date coding)
+      Subtask.swift
+    Services/
+      TaskStore.swift      # @Observable — CRUD, atomic file writes, DispatchSource file watching
+      SettingsManager.swift  # @Observable — UserDefaults-backed, file paths + hotkey + launch-at-login
+      InlineSyntaxParser.swift  # parses "title !N #tag @date /description" → DooTask
+    Views/
+      MainWindow/          # ContentView (sidebar Todo/Done), TodoListView, DoneListView, TaskRowView, TaskDetailView, FilterToolbar
+      QuickAdd/            # QuickAddPanel (NSPanel), QuickAddView
+      Settings/            # SettingsView
+    Utilities/
+      DateFormatting.swift
+Tests/
+  DooTests/                # XCTest target — imports DooKit
+    Models/                # DooTaskCodableTests, SubtaskCodableTests
+    Services/              # InlineSyntaxParserTests, TaskStoreTests, FilterStateTests
+    Utilities/             # DateFormattingTests
+    Helpers/               # TestHelpers (shared factories + utilities)
 ```
+
+The project uses a library + executable split so tests can `@testable import DooKit`.
 
 ## Data Files
 
@@ -84,3 +108,4 @@ Example: `Fix login bug !1 #backend @tomorrow /check token expiry`
 - `@MainActor` on `TaskStore` and `SettingsManager` — all mutations on main thread
 - `AppDelegate` manages the `HotKey` object; re-call `setupHotKey()` after toggling the preference
 - `DooApp.onChange(of: settings.*FilePath)` calls `store.updatePaths` to swap file watchers live
+- `TaskStore.shutdown()` stops file watchers — call in test tearDown to avoid leaked DispatchSources

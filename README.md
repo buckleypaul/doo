@@ -9,7 +9,7 @@ Doo stores your tasks as plain JSON files on disk — no cloud account, no sync 
 ## Requirements
 
 - macOS 15 (Sequoia) or later
-- Xcode Command Line Tools with Swift 6 (`xcode-select --install`)
+- Xcode 16+ (for building, running, and testing)
 
 ## Installation
 
@@ -27,7 +27,7 @@ cp .build/release/Doo /Applications/Doo
 
 ## Running
 
-Development (rebuilds on source changes):
+Development:
 
 ```bash
 swift run
@@ -37,6 +37,25 @@ Release build:
 
 ```bash
 .build/release/Doo
+```
+
+## Testing
+
+```bash
+swift test                                           # run all tests
+swift test --filter DooTests.InlineSyntaxParserTests # single suite
+```
+
+If `swift test` fails with "no such module 'XCTest'", your active developer tools are set to Command Line Tools instead of Xcode. Fix it with:
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+Or prefix test commands without changing the global setting:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
 ## Usage

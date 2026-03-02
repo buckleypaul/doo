@@ -1,18 +1,18 @@
 import Foundation
 
-struct DooTask: Codable, Identifiable, Equatable {
-    var id: UUID
-    var title: String
-    var description: String?
-    var notes: String?
-    var priority: Int
-    var tags: [String]
-    var dueDate: Date?
-    var dateAdded: Date
-    var dateCompleted: Date?
-    var subtasks: [Subtask]
+public struct DooTask: Codable, Identifiable, Equatable, Sendable {
+    public var id: UUID
+    public var title: String
+    public var description: String?
+    public var notes: String?
+    public var priority: Int
+    public var tags: [String]
+    public var dueDate: Date?
+    public var dateAdded: Date
+    public var dateCompleted: Date?
+    public var subtasks: [Subtask]
 
-    init(
+    public init(
         id: UUID = UUID(),
         title: String,
         description: String? = nil,
@@ -37,8 +37,12 @@ struct DooTask: Codable, Identifiable, Equatable {
     }
 }
 
-struct TaskFile: Codable {
-    var tasks: [DooTask]
+public struct TaskFile: Codable, Sendable {
+    public var tasks: [DooTask]
+
+    public init(tasks: [DooTask]) {
+        self.tasks = tasks
+    }
 }
 
 extension DooTask {
@@ -48,7 +52,7 @@ extension DooTask {
         case dueDate, dateAdded, dateCompleted, subtasks
     }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
@@ -71,7 +75,7 @@ extension DooTask {
         }
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
         try container.encode(title, forKey: .title)

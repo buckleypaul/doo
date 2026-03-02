@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
 
-class QuickAddPanel: NSPanel {
-    init(store: TaskStore) {
+public class QuickAddPanel: NSPanel {
+    public init(store: TaskStore) {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 520, height: 100),
             styleMask: [.nonactivatingPanel, .fullSizeContentView],
@@ -42,7 +42,7 @@ class QuickAddPanel: NSPanel {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    func toggle() {
+    public func toggle() {
         if isVisible {
             close()
         } else {
@@ -50,5 +50,5 @@ class QuickAddPanel: NSPanel {
         }
     }
 
-    override var canBecomeKey: Bool { true }
+    override public var canBecomeKey: Bool { true }
 }

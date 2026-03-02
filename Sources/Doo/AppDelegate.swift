@@ -1,4 +1,5 @@
 import AppKit
+import DooKit
 import HotKey
 import SwiftUI
 

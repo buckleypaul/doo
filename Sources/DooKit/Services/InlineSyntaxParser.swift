@@ -1,9 +1,9 @@
 import Foundation
 
-enum InlineSyntaxParser {
+public enum InlineSyntaxParser {
     /// Parse quick-add input text into a DooTask.
     /// Syntax: `title text !N #tag @date /description`
-    static func parse(_ input: String) -> DooTask {
+    public static func parse(_ input: String) -> DooTask {
         var remaining = input
         var priority = 3
         var tags: [String] = []

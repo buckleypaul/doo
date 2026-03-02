@@ -3,9 +3,9 @@ import Observation
 
 @MainActor
 @Observable
-class TaskStore {
-    var activeTasks: [DooTask] = []
-    var completedTasks: [DooTask] = []
+public class TaskStore {
+    public var activeTasks: [DooTask] = []
+    public var completedTasks: [DooTask] = []
 
     private var todoFileURL: URL
     private var doneFileURL: URL
@@ -14,7 +14,7 @@ class TaskStore {
     private var debounceWorkItem: DispatchWorkItem?
     private var isSaving = false
 
-    init(todoPath: String? = nil, donePath: String? = nil) {
+    public init(todoPath: String? = nil, donePath: String? = nil) {
         let home = FileManager.default.homeDirectoryForCurrentUser
         self.todoFileURL = URL(fileURLWithPath: todoPath ?? home.appendingPathComponent("doo-todo.json").path)
         self.doneFileURL = URL(fileURLWithPath: donePath ?? home.appendingPathComponent("doo-done.json").path)
@@ -24,12 +24,12 @@ class TaskStore {
 
     // MARK: - CRUD
 
-    func addTask(_ task: DooTask) {
+    public func addTask(_ task: DooTask) {
         activeTasks.insert(task, at: 0)
         saveTodoFile()
     }
 
-    func completeTask(_ task: DooTask) {
+    public func completeTask(_ task: DooTask) {
         guard let index = activeTasks.firstIndex(where: { $0.id == task.id }) else { return }
         var completed = activeTasks.remove(at: index)
         completed.dateCompleted = Date()
@@ -38,7 +38,7 @@ class TaskStore {
         saveDoneFile()
     }
 
-    func uncompleteTask(_ task: DooTask) {
+    public func uncompleteTask(_ task: DooTask) {
         guard let index = completedTasks.firstIndex(where: { $0.id == task.id }) else { return }
         var restored = completedTasks.remove(at: index)
         restored.dateCompleted = nil
@@ -47,7 +47,7 @@ class TaskStore {
         saveDoneFile()
     }
 
-    func updateTask(_ task: DooTask) {
+    public func updateTask(_ task: DooTask) {
         if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
             activeTasks[index] = task
             saveTodoFile()
@@ -57,7 +57,7 @@ class TaskStore {
         }
     }
 
-    func deleteTask(_ task: DooTask) {
+    public func deleteTask(_ task: DooTask) {
         if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
             activeTasks.remove(at: index)
             saveTodoFile()
@@ -69,12 +69,20 @@ class TaskStore {
 
     // MARK: - File Path Updates
 
-    func updatePaths(todoPath: String, donePath: String) {
+    public func updatePaths(todoPath: String, donePath: String) {
         stopWatching()
         todoFileURL = URL(fileURLWithPath: todoPath)
         doneFileURL = URL(fileURLWithPath: donePath)
         loadAll()
         startWatching()
+    }
+
+    // MARK: - Lifecycle
+
+    public func shutdown() {
+        stopWatching()
+        debounceWorkItem?.cancel()
+        debounceWorkItem = nil
     }
 
     // MARK: - File I/O

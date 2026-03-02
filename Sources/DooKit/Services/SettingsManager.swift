@@ -4,22 +4,22 @@ import SwiftUI
 
 @MainActor
 @Observable
-class SettingsManager {
-    static let shared = SettingsManager()
+public class SettingsManager {
+    public static let shared = SettingsManager()
 
-    var todoFilePath: String {
+    public var todoFilePath: String {
         didSet { UserDefaults.standard.set(todoFilePath, forKey: "todoFilePath") }
     }
 
-    var doneFilePath: String {
+    public var doneFilePath: String {
         didSet { UserDefaults.standard.set(doneFilePath, forKey: "doneFilePath") }
     }
 
-    var hotkeyEnabled: Bool {
+    public var hotkeyEnabled: Bool {
         didSet { UserDefaults.standard.set(hotkeyEnabled, forKey: "hotkeyEnabled") }
     }
 
-    var launchAtLogin: Bool {
+    public var launchAtLogin: Bool {
         didSet {
             UserDefaults.standard.set(launchAtLogin, forKey: "launchAtLogin")
             updateLaunchAtLogin()

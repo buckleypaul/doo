@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-enum DateFormatting {
+public enum DateFormatting {
     private static let dateOnlyFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
@@ -15,19 +15,19 @@ enum DateFormatting {
         return f
     }()
 
-    static func dateOnly(_ date: Date) -> String {
+    public static func dateOnly(_ date: Date) -> String {
         dateOnlyFormatter.string(from: date)
     }
 
-    static func relative(_ date: Date) -> String {
+    public static func relative(_ date: Date) -> String {
         relativeDateFormatter.localizedString(for: date, relativeTo: Date())
     }
 
-    static func shortDateTime(_ date: Date) -> String {
+    public static func shortDateTime(_ date: Date) -> String {
         date.formatted(date: .abbreviated, time: .shortened)
     }
 
-    nonisolated static func isOverdue(_ date: Date) -> Bool {
+    nonisolated public static func isOverdue(_ date: Date) -> Bool {
         Calendar.current.startOfDay(for: date) < Calendar.current.startOfDay(for: Date())
     }
 }

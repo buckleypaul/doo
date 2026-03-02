@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum SortOption: String, CaseIterable, Identifiable {
+public enum SortOption: String, CaseIterable, Identifiable, Sendable {
     case priority = "Priority"
     case dateAddedNewest = "Newest"
     case dateAddedOldest = "Oldest"
@@ -8,20 +8,36 @@ enum SortOption: String, CaseIterable, Identifiable {
     case alphabetical = "A-Z"
     case dateCompleted = "Date Completed"
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 }
 
-struct FilterState {
-    var searchText = ""
-    var sortOption: SortOption = .priority
-    var selectedTags: Set<String> = []
-    var minPriority: Int = 1
-    var maxPriority: Int = 5
-    var overdueOnly = false
+public struct FilterState: Sendable {
+    public var searchText = ""
+    public var sortOption: SortOption = .priority
+    public var selectedTags: Set<String> = []
+    public var minPriority: Int = 1
+    public var maxPriority: Int = 5
+    public var overdueOnly = false
+
+    public init(
+        searchText: String = "",
+        sortOption: SortOption = .priority,
+        selectedTags: Set<String> = [],
+        minPriority: Int = 1,
+        maxPriority: Int = 5,
+        overdueOnly: Bool = false
+    ) {
+        self.searchText = searchText
+        self.sortOption = sortOption
+        self.selectedTags = selectedTags
+        self.minPriority = minPriority
+        self.maxPriority = maxPriority
+        self.overdueOnly = overdueOnly
+    }
 }
 
 extension FilterState {
-    func apply(to tasks: [DooTask]) -> [DooTask] {
+    public func apply(to tasks: [DooTask]) -> [DooTask] {
         var result = tasks
 
         // Search
