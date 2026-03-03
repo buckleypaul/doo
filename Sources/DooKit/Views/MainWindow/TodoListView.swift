@@ -4,6 +4,8 @@ struct TodoListView: View {
     @Bindable var store: TaskStore
     @State private var filterState = FilterState()
     @State private var taskToDelete: DooTask?
+    @State private var newTaskInput = ""
+    @FocusState private var isInputFocused: Bool
 
     private var filteredTasks: [DooTask] {
         filterState.apply(to: store.activeTasks)
@@ -16,6 +18,12 @@ struct TodoListView: View {
     var body: some View {
         VStack(spacing: 0) {
             FilterToolbar(filterState: $filterState, availableTags: allTags, showDateCompleted: false)
+
+            Divider()
+
+            InlineAddRow(input: $newTaskInput, isFocused: $isInputFocused) {
+                submitNewTask()
+            }
 
             Divider()
 
@@ -59,18 +67,6 @@ struct TodoListView: View {
                 }
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    let newTask = DooTask(title: "New Task")
-                    withAnimation {
-                        store.addTask(newTask)
-                    }
-                } label: {
-                    Label("Add Task", systemImage: "plus")
-                }
-            }
-        }
         .alert("Delete Task?", isPresented: Binding(
             get: { taskToDelete != nil },
             set: { if !$0 { taskToDelete = nil } }
@@ -87,5 +83,41 @@ struct TodoListView: View {
                 Text("Are you sure you want to delete \"\(task.title)\"?")
             }
         }
+    }
+
+    private func submitNewTask() {
+        let trimmed = newTaskInput.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        let task = InlineSyntaxParser.parse(trimmed)
+        withAnimation {
+            store.addTask(task)
+        }
+        newTaskInput = ""
+        isInputFocused = true
+    }
+}
+
+private struct InlineAddRow: View {
+    @Binding var input: String
+    var isFocused: FocusState<Bool>.Binding
+    let onSubmit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            TextField("Add a task... (!priority #tag @date /desc)", text: $input)
+                .textFieldStyle(.plain)
+                .focused(isFocused)
+                .onSubmit { onSubmit() }
+
+            Button(action: onSubmit) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(input.trimmingCharacters(in: .whitespaces).isEmpty ? Color.secondary : Color.accentColor)
+            }
+            .buttonStyle(.plain)
+            .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 }
