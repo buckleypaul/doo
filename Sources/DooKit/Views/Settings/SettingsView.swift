@@ -33,7 +33,6 @@ struct SettingsView: View {
 
             Section("General") {
                 Toggle("Launch at login", isOn: $settings.launchAtLogin)
-                Toggle("Group tasks by pipeline status", isOn: $settings.groupByStatus)
             }
         }
         .formStyle(.grouped)

@@ -25,7 +25,8 @@ final class SettingsReaderTests: XCTestCase {
         XCTAssertTrue(config.doneFilePath.hasSuffix("/.local/share/doo/done.json"))
         XCTAssertTrue(config.hotkeyEnabled)
         XCTAssertFalse(config.launchAtLogin)
-        XCTAssertTrue(config.groupByStatus)
+        XCTAssertEqual(config.sections.count, 1)
+        XCTAssertEqual(config.sections.first?.name, "All Tasks")
     }
 
     func testLoadValidConfig() throws {
@@ -53,5 +54,47 @@ final class SettingsReaderTests: XCTestCase {
         let config = SettingsReader.load(from: url)
         XCTAssertTrue(config.hotkeyEnabled)
         XCTAssertTrue(config.todoFilePath.hasSuffix("/.local/share/doo/todo.json"))
+    }
+
+    func testLegacyConfigWithoutSectionsMigratesToDefault() throws {
+        let url = tempDir.appendingPathComponent("settings.json")
+        // Simulate old config with groupByStatus but no sections key
+        let json = """
+        {
+            "todoFilePath": "/custom/todo.json",
+            "doneFilePath": "/custom/done.json",
+            "hotkeyEnabled": true,
+            "launchAtLogin": false,
+            "groupByStatus": true
+        }
+        """
+        try json.write(to: url, atomically: true, encoding: .utf8)
+
+        let config = SettingsReader.load(from: url)
+        XCTAssertEqual(config.sections.count, 1)
+        XCTAssertEqual(config.sections.first?.name, "All Tasks")
+        XCTAssertEqual(config.todoFilePath, "/custom/todo.json")
+    }
+
+    func testConfigWithMultipleSectionsRoundTrips() throws {
+        let url = tempDir.appendingPathComponent("settings.json")
+        let sections = [
+            TaskSection(name: "Urgent", order: 0, selectedPriorities: Set([0])),
+            TaskSection(name: "Backlog", order: 1, selectedStatuses: Set([.backlog])),
+        ]
+        let config = SettingsConfig(
+            todoFilePath: "/tmp/todo.json",
+            doneFilePath: "/tmp/done.json",
+            sections: sections
+        )
+        let data = try JSONEncoder().encode(config)
+        try data.write(to: url)
+
+        let loaded = SettingsReader.load(from: url)
+        XCTAssertEqual(loaded.sections.count, 2)
+        XCTAssertEqual(loaded.sections[0].name, "Urgent")
+        XCTAssertEqual(loaded.sections[0].selectedPriorities, Set([0]))
+        XCTAssertEqual(loaded.sections[1].name, "Backlog")
+        XCTAssertEqual(loaded.sections[1].selectedStatuses, Set([.backlog]))
     }
 }

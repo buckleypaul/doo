@@ -44,7 +44,7 @@ public struct ContentView: View {
         } detail: {
             switch selection {
             case .todo:
-                TodoListView(store: store, settings: settings)
+                SectionedTaskListView(store: store, settings: settings)
                     .navigationTitle("Todo")
             case .done:
                 DoneListView(store: store)

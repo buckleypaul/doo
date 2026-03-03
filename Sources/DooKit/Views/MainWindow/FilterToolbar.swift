@@ -85,7 +85,7 @@ struct FilterToolbar: View {
 
 // MARK: - FilterPill
 
-private struct FilterPill: View {
+struct FilterPill: View {
     let label: String
     let isActive: Bool
     let action: () -> Void
@@ -112,7 +112,7 @@ private struct FilterPill: View {
 
 // MARK: - TagsDropdown
 
-private struct TagsDropdown: View {
+struct TagsDropdown: View {
     let availableTags: [String]
     @Binding var selectedTags: Set<String>
 

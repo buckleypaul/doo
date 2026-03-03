@@ -28,7 +28,7 @@ public class SettingsManager {
         }
     }
 
-    public var groupByStatus: Bool {
+    public var sections: [TaskSection] {
         didSet { saveConfig() }
     }
 
@@ -54,7 +54,33 @@ public class SettingsManager {
         self.doneFilePath = config.doneFilePath
         self.hotkeyEnabled = config.hotkeyEnabled
         self.launchAtLogin = config.launchAtLogin
-        self.groupByStatus = config.groupByStatus
+        self.sections = config.sections
+    }
+
+    // MARK: - Section helpers
+
+    public func updateSection(_ section: TaskSection) {
+        if let index = sections.firstIndex(where: { $0.id == section.id }) {
+            sections[index] = section
+        }
+    }
+
+    public func addSection(name: String) {
+        let order = (sections.map(\.order).max() ?? -1) + 1
+        let section = TaskSection(name: name, order: order)
+        sections.append(section)
+    }
+
+    public func removeSection(id: UUID) {
+        guard sections.count > 1 else { return }
+        sections.removeAll { $0.id == id }
+    }
+
+    public func moveSections(from source: IndexSet, to destination: Int) {
+        sections.move(fromOffsets: source, toOffset: destination)
+        for i in sections.indices {
+            sections[i].order = i
+        }
     }
 
     // MARK: - Persistence
@@ -65,7 +91,7 @@ public class SettingsManager {
             doneFilePath: doneFilePath,
             hotkeyEnabled: hotkeyEnabled,
             launchAtLogin: launchAtLogin,
-            groupByStatus: groupByStatus
+            sections: sections
         )
         do {
             let dir = configURL.deletingLastPathComponent()

@@ -22,7 +22,6 @@ final class SettingsManagerTests: XCTestCase {
     }
 
     func testFreshInitUsesDefaults() throws {
-        // No file at configURL — should use built-in defaults
         let manager = SettingsManager(configURL: configURL)
         XCTAssertTrue(manager.todoFilePath.hasSuffix("/.local/share/doo/todo.json"))
         XCTAssertTrue(manager.doneFilePath.hasSuffix("/.local/share/doo/done.json"))
@@ -37,7 +36,6 @@ final class SettingsManagerTests: XCTestCase {
             manager.hotkeyEnabled = false
             manager.todoFilePath = expectedTodoPath
         }
-        // Re-init from the same file — manager is out of scope, only manager2 can write
         let manager2 = SettingsManager(configURL: configURL)
         XCTAssertFalse(manager2.hotkeyEnabled)
         XCTAssertEqual(manager2.todoFilePath, expectedTodoPath)
@@ -50,17 +48,76 @@ final class SettingsManagerTests: XCTestCase {
         XCTAssertTrue(manager.todoFilePath.hasSuffix("/.local/share/doo/todo.json"))
     }
 
-    func testGroupByStatusDefaultsToTrue() throws {
+    // MARK: - Section tests
+
+    func testSectionsDefaultToSingleAllTasks() throws {
         let manager = SettingsManager(configURL: configURL)
-        XCTAssertTrue(manager.groupByStatus)
+        XCTAssertEqual(manager.sections.count, 1)
+        XCTAssertEqual(manager.sections.first?.name, "All Tasks")
     }
 
-    func testGroupByStatusPersists() throws {
+    func testAddSection() throws {
+        let manager = SettingsManager(configURL: configURL)
+        manager.addSection(name: "Urgent")
+        XCTAssertEqual(manager.sections.count, 2)
+        XCTAssertEqual(manager.sections.last?.name, "Urgent")
+        XCTAssertEqual(manager.sections.last?.order, 1)
+    }
+
+    func testRemoveSection() throws {
+        let manager = SettingsManager(configURL: configURL)
+        manager.addSection(name: "Urgent")
+        XCTAssertEqual(manager.sections.count, 2)
+
+        let urgentID = manager.sections.last!.id
+        manager.removeSection(id: urgentID)
+        XCTAssertEqual(manager.sections.count, 1)
+        XCTAssertEqual(manager.sections.first?.name, "All Tasks")
+    }
+
+    func testRemoveLastSectionIsNoOp() throws {
+        let manager = SettingsManager(configURL: configURL)
+        XCTAssertEqual(manager.sections.count, 1)
+
+        let onlyID = manager.sections.first!.id
+        manager.removeSection(id: onlyID)
+        XCTAssertEqual(manager.sections.count, 1)
+    }
+
+    func testUpdateSection() throws {
+        let manager = SettingsManager(configURL: configURL)
+        var section = manager.sections.first!
+        section.name = "Renamed"
+        section.overdueOnly = true
+        manager.updateSection(section)
+
+        XCTAssertEqual(manager.sections.first?.name, "Renamed")
+        XCTAssertTrue(manager.sections.first?.overdueOnly ?? false)
+    }
+
+    func testMoveSections() throws {
+        let manager = SettingsManager(configURL: configURL)
+        manager.addSection(name: "Second")
+        manager.addSection(name: "Third")
+        XCTAssertEqual(manager.sections.map(\.name), ["All Tasks", "Second", "Third"])
+
+        // Move "Third" (index 2) to index 0
+        manager.moveSections(from: IndexSet(integer: 2), to: 0)
+        XCTAssertEqual(manager.sections.map(\.name), ["Third", "All Tasks", "Second"])
+        XCTAssertEqual(manager.sections.map(\.order), [0, 1, 2])
+    }
+
+    func testSectionsPersist() throws {
         do {
             let manager = SettingsManager(configURL: configURL)
-            manager.groupByStatus = false
+            manager.addSection(name: "Backlog")
+            var section = manager.sections.last!
+            section.selectedStatuses = Set([.backlog])
+            manager.updateSection(section)
         }
         let manager2 = SettingsManager(configURL: configURL)
-        XCTAssertFalse(manager2.groupByStatus)
+        XCTAssertEqual(manager2.sections.count, 2)
+        XCTAssertEqual(manager2.sections.last?.name, "Backlog")
+        XCTAssertEqual(manager2.sections.last?.selectedStatuses, Set([.backlog]))
     }
 }
