@@ -7,7 +7,7 @@ macOS 15+ todo app. Swift 6 / SwiftUI. Local JSON storage.
 ```bash
 swift build -c release          # release build → .build/release/Doo
 swift run                        # dev run
-swift test                       # run all 59 tests
+swift test                       # run all 58 tests
 swift test --filter DooTests.InlineSyntaxParserTests  # single suite
 ```
 

@@ -69,7 +69,6 @@ public class SettingsManager {
             self.doneFilePath = defaultDone
             self.hotkeyEnabled = true
             self.launchAtLogin = false
-            saveConfig()
         }
     }
 
