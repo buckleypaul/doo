@@ -31,14 +31,16 @@ final class SettingsManagerTests: XCTestCase {
     }
 
     func testRoundTrip() throws {
-        let manager = SettingsManager(configURL: configURL)
-        manager.hotkeyEnabled = false
-        manager.todoFilePath = tempDir.appendingPathComponent("custom-todo.json").path
-
-        // Re-init from the same file
+        let expectedTodoPath = tempDir.appendingPathComponent("custom-todo.json").path
+        do {
+            let manager = SettingsManager(configURL: configURL)
+            manager.hotkeyEnabled = false
+            manager.todoFilePath = expectedTodoPath
+        }
+        // Re-init from the same file — manager is out of scope, only manager2 can write
         let manager2 = SettingsManager(configURL: configURL)
         XCTAssertFalse(manager2.hotkeyEnabled)
-        XCTAssertEqual(manager2.todoFilePath, manager.todoFilePath)
+        XCTAssertEqual(manager2.todoFilePath, expectedTodoPath)
     }
 
     func testCorruptFileFallsBackToDefaults() throws {
