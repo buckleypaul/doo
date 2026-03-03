@@ -198,3 +198,15 @@ Status shortcuts: `%untriaged`, `%backlog`, `%inprogress` (or `%in-progress`, `%
 - `PipelineStatus.fromShorthand()` normalizes various input formats (hyphens, underscores, camelCase) to enum cases
 - TodoListView supports grouped (DisclosureGroup per status) and flat (Table) views, toggled via `settings.groupByStatus`
 - CLI `task list` shows grouped output by default; `--status` filter or `--done` uses flat output
+
+## CLI Skill (doo:tasks)
+
+A Claude Code skill at `~/projects/work-tools/buckleypaul-skills/plugins/doo/skills/tasks/SKILL.md`
+exposes the doo CLI as a task management tool for other workflows.
+
+**Keep the skill in sync**: when you add or change CLI commands, flags, output format,
+or inline syntax, update the skill file to match. Changes that require a skill update:
+- New subcommands or flags in `Sources/DooCLILib/Commands/`
+- Changes to `Sources/DooCore/Services/InlineSyntaxParser.swift` (new tokens/syntax)
+- Changes to `Sources/DooCore/Models/PipelineStatus.swift` (new statuses)
+- Changes to `--json` output schema (`Sources/DooCore/Models/DooTask.swift`)
