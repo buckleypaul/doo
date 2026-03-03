@@ -47,7 +47,7 @@ struct TaskListCommand: ParsableCommand {
 
         if json {
             print(try JSONOutput.encode(filtered))
-        } else if !done && status.isEmpty && filter.selectedStatuses.isEmpty {
+        } else if !done && status.isEmpty {
             print(TableFormatter.formatGroupedTaskList(filtered))
         } else {
             print(TableFormatter.formatTaskList(filtered))

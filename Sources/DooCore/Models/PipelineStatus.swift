@@ -17,15 +17,6 @@ public enum PipelineStatus: String, Codable, CaseIterable, Identifiable, Sendabl
         }
     }
 
-    public var sortOrder: Int {
-        switch self {
-        case .untriaged: return 0
-        case .backlog: return 1
-        case .inProgress: return 2
-        case .inReview: return 3
-        }
-    }
-
     public static func fromShorthand(_ input: String) -> PipelineStatus? {
         let normalized = input.lowercased()
             .replacingOccurrences(of: "-", with: "")

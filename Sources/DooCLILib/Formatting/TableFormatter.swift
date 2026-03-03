@@ -9,16 +9,7 @@ public enum TableFormatter {
 
         var lines: [String] = []
 
-        // Header
-        lines.append(
-            pad("#", width: 4, right: false)
-            + "  " + pad("ID", width: 8)
-            + "  " + pad("P", width: 2)
-            + "  " + pad("Title", width: 30)
-            + "  " + pad("Due", width: 12)
-            + "  " + "Tags"
-        )
-        lines.append(String(repeating: "-", count: 80))
+        appendHeader(&lines)
 
         // Rows
         for (i, task) in tasks.enumerated() {
@@ -48,16 +39,7 @@ public enum TableFormatter {
             if group.isEmpty {
                 lines.append("  (none)")
             } else {
-                // Header
-                lines.append(
-                    pad("#", width: 4, right: false)
-                    + "  " + pad("ID", width: 8)
-                    + "  " + pad("P", width: 2)
-                    + "  " + pad("Title", width: 30)
-                    + "  " + pad("Due", width: 12)
-                    + "  " + "Tags"
-                )
-                lines.append(String(repeating: "-", count: 80))
+                appendHeader(&lines)
                 for task in group {
                     lines.append(formatRow(index: globalIndex, task: task))
                     globalIndex += 1
@@ -103,6 +85,18 @@ public enum TableFormatter {
         }
 
         return lines.joined(separator: "\n")
+    }
+
+    private static func appendHeader(_ lines: inout [String]) {
+        lines.append(
+            pad("#", width: 4, right: false)
+            + "  " + pad("ID", width: 8)
+            + "  " + pad("P", width: 2)
+            + "  " + pad("Title", width: 30)
+            + "  " + pad("Due", width: 12)
+            + "  " + "Tags"
+        )
+        lines.append(String(repeating: "-", count: 80))
     }
 
     private static func formatRow(index: Int, task: DooTask) -> String {

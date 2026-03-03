@@ -112,12 +112,14 @@ struct TodoListView: View {
 
     @ViewBuilder
     private var groupedView: some View {
+        let tasks = displayedTasks
+        let grouped = Dictionary(grouping: tasks, by: \.status)
         List(selection: Binding(
             get: { selectedTaskID },
             set: { if let id = $0 { selectedTaskID = id } }
         )) {
             ForEach(PipelineStatus.allCases) { status in
-                let sectionTasks = displayedTasks.filter { $0.status == status }
+                let sectionTasks = grouped[status, default: []]
                 DisclosureGroup(
                     isExpanded: Binding(
                         get: { expandedSections.contains(status) },
@@ -195,10 +197,9 @@ struct TodoListView: View {
             ForEach(PipelineStatus.allCases) { status in
                 if status != task.status {
                     Button(status.displayName) {
-                        if let index = store.activeTasks.firstIndex(where: { $0.id == task.id }) {
-                            store.activeTasks[index].status = status
-                            store.updateTask(store.activeTasks[index])
-                        }
+                        var updated = task
+                        updated.status = status
+                        store.updateTask(updated)
                     }
                 }
             }
