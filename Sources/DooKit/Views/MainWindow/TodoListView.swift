@@ -11,7 +11,6 @@ struct TodoListView: View {
     @State private var showDetail = true
     @State private var savedDetailWidth: CGFloat = 320
     @State private var dragStartWidth: CGFloat? = nil
-    @State private var hoveredTaskID: DooTask.ID?
 
     private var displayedTasks: [DooTask] {
         filterState.apply(to: store.activeTasks).sorted(using: sortOrder)
@@ -99,23 +98,20 @@ struct TodoListView: View {
                 get: { selectedTaskID },
                 set: { if let id = $0 { selectedTaskID = id } }
             ), sortOrder: $sortOrder) {
+                TableColumn("") { task in
+                    CompleteButtonCell(isCompleted: false) {
+                        store.completeTask(task)
+                    }
+                    .tableCell(alignment: .center)
+                }
+                .width(DooStyle.Size.icon + DooStyle.Spacing.sm)
                 TableColumn("Title", value: \.title) { task in
                     Text(task.title)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                        .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
+                        .tableCell()
                 }
                 TableColumn("Priority", value: \.priority) { task in
-                    let color = DooStyle.priorityColor(for: task.priority)
-                    Text("P\(task.priority)")
-                        .font(.caption2.weight(.bold))
-                        .frame(width: DooStyle.Size.badge, height: DooStyle.Size.badge)
-                        .background(color.opacity(0.2))
-                        .foregroundStyle(color)
-                        .clipShape(RoundedRectangle(cornerRadius: DooStyle.Radius.badge))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .contentShape(Rectangle())
-                        .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
+                    PriorityBadge(priority: task.priority)
+                        .tableCell(alignment: .center)
                 }
                 .width(70)
                 TableColumn("Tags") { task in
@@ -129,9 +125,7 @@ struct TodoListView: View {
                                 .clipShape(Capsule())
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                    .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
+                    .tableCell()
                 }
                 TableColumn("Due", value: \.dueDateSortKey) { task in
                     Group {
@@ -145,28 +139,21 @@ struct TodoListView: View {
                                 .foregroundStyle(.tertiary)
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                    .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
+                    .tableCell()
                 }
                 .width(100)
                 TableColumn("Added", value: \.dateAdded) { task in
                     Text(DateFormatting.relative(task.dateAdded))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                        .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
+                        .tableCell()
                 }
                 .width(90)
                 TableColumn("") { task in
                     DeleteButtonCell(
-                        isHovered: hoveredTaskID == task.id,
                         onDelete: { withAnimation { store.deleteTask(task) } }
                     )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(Rectangle())
-                    .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
+                    .tableCell(alignment: .center)
                 }
                 .width(min: 24, ideal: 64, max: 64)
             }

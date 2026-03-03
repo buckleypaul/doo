@@ -36,7 +36,8 @@ Under `Tests/DooCLITests/`:
 - Due date parsing → `DueDateParserTests`
 - CLI task add command → `TaskAddTests`
 - CLI task edit command → `TaskEditTests`
-- CLI subtask commands → `SubtaskTests`
+- CLI list filtering/priority ranges → `TaskListFilterTests`
+- CLI subtask commands → no test file yet (create `SubtaskTests.swift` when adding)
 
 Run `swift test` and confirm all tests pass before considering any change complete.
 
@@ -62,7 +63,7 @@ Sources/
       TaskStore.swift       # @Observable — CRUD, file watching, delegates I/O to TaskFileIO
       SettingsManager.swift # @Observable — JSON-backed settings, uses SettingsConfig
     Views/
-      MainWindow/           # ContentView, TodoListView, DoneListView, TaskDetailView, FilterToolbar
+      MainWindow/           # ContentView, TodoListView, DoneListView, TaskDetailView, FilterToolbar, DeleteButtonCell, CompleteButtonCell
       QuickAdd/             # QuickAddPanel (NSPanel), QuickAddView
       Settings/             # SettingsView
   Doo/                     # GUI executable (2 files)
@@ -88,7 +89,8 @@ Tests/
     Utilities/              # DateFormattingTests
     Helpers/                # TestHelpers (shared factories + utilities)
   DooCLITests/             # XCTest target — imports DooCLILib + DooCore
-                            # CLITaskStoreTests, TaskIDResolverTests, TableFormatterTests
+                            # CLITaskStoreTests, TaskIDResolverTests, TableFormatterTests,
+                            # DueDateParserTests, TaskAddTests, TaskEditTests, TaskListFilterTests
 ```
 
 The project uses library + executable splits so tests can `@testable import DooKit` / `@testable import DooCLILib`.

@@ -30,6 +30,29 @@ enum DooStyle {
     }
 }
 
+extension View {
+    /// Expands a table cell to fill its column and enables full-cell hit-testing.
+    func tableCell(alignment: Alignment = .leading) -> some View {
+        self
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+            .contentShape(Rectangle())
+    }
+}
+
+struct PriorityBadge: View {
+    let priority: Int
+
+    var body: some View {
+        let color = DooStyle.priorityColor(for: priority)
+        Text("P\(priority)")
+            .font(.caption2.weight(.bold))
+            .frame(width: DooStyle.Size.badge, height: DooStyle.Size.badge)
+            .background(color.opacity(0.2))
+            .foregroundStyle(color)
+            .clipShape(RoundedRectangle(cornerRadius: DooStyle.Radius.badge))
+    }
+}
+
 /// Applies the same NSVisualEffectView(.sidebar) background used by NavigationSplitView's sidebar column.
 struct SidebarMaterial: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
