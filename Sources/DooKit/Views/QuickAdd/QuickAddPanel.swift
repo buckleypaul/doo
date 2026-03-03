@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 public class QuickAddPanel: NSPanel {
-    public init(store: TaskStore) {
+    public init(store: TaskStore, onTaskAdded: (() -> Void)? = nil) {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 520, height: 100),
             styleMask: [.nonactivatingPanel, .fullSizeContentView],
@@ -22,6 +22,7 @@ public class QuickAddPanel: NSPanel {
         let view = QuickAddView(
             onSubmit: { [weak self] task in
                 store.addTask(task)
+                onTaskAdded?()
                 self?.close()
             },
             onDismiss: { [weak self] in
@@ -39,7 +40,6 @@ public class QuickAddPanel: NSPanel {
         let y = screenFrame.midY + screenFrame.height / 4
         setFrameOrigin(NSPoint(x: x, y: y))
         makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     public func toggle() {

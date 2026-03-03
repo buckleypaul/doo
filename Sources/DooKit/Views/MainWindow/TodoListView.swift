@@ -14,6 +14,9 @@ struct TodoListView: View {
     @State private var dragStartWidth: CGFloat? = nil
     @State private var expandedSections: Set<PipelineStatus> = Set(PipelineStatus.allCases)
     @State private var hoveredTaskID: DooTask.ID?
+    @State private var tagPopoverTaskID: DooTask.ID?
+    @State private var statusPopoverTaskID: DooTask.ID?
+    @State private var dueDatePopoverTaskID: DooTask.ID?
 
     private var displayedTasks: [DooTask] {
         filterState.apply(to: store.activeTasks).sorted(using: sortOrder)
@@ -194,22 +197,57 @@ struct TodoListView: View {
                 .lineLimit(1)
             Spacer()
             PriorityBadge(priority: task.priority)
-            if !task.tags.isEmpty {
-                HStack(spacing: 2) {
-                    ForEach(task.tags.prefix(2), id: \.self) { tag in
-                        Text(tag)
-                            .font(.caption)
-                            .padding(.horizontal, DooStyle.Spacing.sm - 2)
-                            .padding(.vertical, DooStyle.Spacing.xs)
-                            .background(DooStyle.tagBg)
-                            .clipShape(Capsule())
-                    }
+            HStack(spacing: 2) {
+                ForEach(task.tags.prefix(2), id: \.self) { tag in
+                    Text(tag)
+                        .font(.caption)
+                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                        .padding(.vertical, DooStyle.Spacing.xs)
+                        .background(DooStyle.tagBg)
+                        .clipShape(Capsule())
+                }
+                Button {
+                    tagPopoverTaskID = task.id
+                } label: {
+                    Text("+ tag")
+                        .font(.caption)
+                        .foregroundStyle(DooStyle.textTertiary)
+                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                        .padding(.vertical, DooStyle.Spacing.xs)
+                        .background(DooStyle.tagBg.opacity(0.5))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: Binding(
+                    get: { tagPopoverTaskID == task.id },
+                    set: { if !$0 { tagPopoverTaskID = nil } }
+                )) {
+                    InlineTagEditor(task: task, store: store)
                 }
             }
-            if let due = task.dueDate {
-                Text(DateFormatting.dateOnly(due))
-                    .font(.caption)
-                    .foregroundStyle(DateFormatting.isOverdue(due) ? DooStyle.colorRed : DooStyle.textSecondary)
+            Button {
+                dueDatePopoverTaskID = task.id
+            } label: {
+                if let due = task.dueDate {
+                    Text(DateFormatting.dateOnly(due))
+                        .font(.caption)
+                        .foregroundStyle(DateFormatting.isOverdue(due) ? DooStyle.colorRed : DooStyle.textSecondary)
+                } else {
+                    Text("+ date")
+                        .font(.caption)
+                        .foregroundStyle(DooStyle.textTertiary)
+                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                        .padding(.vertical, DooStyle.Spacing.xs)
+                        .background(DooStyle.tagBg.opacity(0.5))
+                        .clipShape(Capsule())
+                }
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: Binding(
+                get: { dueDatePopoverTaskID == task.id },
+                set: { if !$0 { dueDatePopoverTaskID = nil } }
+            )) {
+                InlineDueDateEditor(task: task, store: store)
             }
             DeleteButtonCell(
                 onDelete: { withAnimation { store.deleteTask(task) } }
@@ -258,9 +296,20 @@ struct TodoListView: View {
                     .tableCell()
             }
             TableColumn("Status") { task in
-                Text(task.status.displayName)
-                    .font(.caption)
-                    .tableCell()
+                Button {
+                    statusPopoverTaskID = task.id
+                } label: {
+                    Text(task.status.displayName)
+                        .font(.caption)
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: Binding(
+                    get: { statusPopoverTaskID == task.id },
+                    set: { if !$0 { statusPopoverTaskID = nil } }
+                )) {
+                    InlineStatusEditor(task: task, store: store)
+                }
+                .tableCell()
             }
             .width(90)
             TableColumn("Priority", value: \.priority) { task in
@@ -269,7 +318,7 @@ struct TodoListView: View {
             }
             .width(70)
             TableColumn("Tags") { task in
-                HStack(spacing: DooStyle.Spacing.xs) {
+                HStack(spacing: 2) {
                     ForEach(task.tags, id: \.self) { tag in
                         Text(tag)
                             .font(.caption)
@@ -278,20 +327,51 @@ struct TodoListView: View {
                             .background(DooStyle.tagBg)
                             .clipShape(Capsule())
                     }
+                    Button {
+                        tagPopoverTaskID = task.id
+                    } label: {
+                        Text("+ tag")
+                            .font(.caption)
+                            .foregroundStyle(DooStyle.textTertiary)
+                            .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                            .padding(.vertical, DooStyle.Spacing.xs)
+                            .background(DooStyle.tagBg.opacity(0.5))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: Binding(
+                        get: { tagPopoverTaskID == task.id },
+                        set: { if !$0 { tagPopoverTaskID = nil } }
+                    )) {
+                        InlineTagEditor(task: task, store: store)
+                    }
                 }
                 .tableCell()
             }
             TableColumn("Due", value: \.dueDateSortKey) { task in
-                Group {
+                Button {
+                    dueDatePopoverTaskID = task.id
+                } label: {
                     if let due = task.dueDate {
                         Text(DateFormatting.dateOnly(due))
                             .font(.caption)
                             .foregroundStyle(DateFormatting.isOverdue(due) ? DooStyle.colorRed : DooStyle.textSecondary)
                     } else {
-                        Text("—")
+                        Text("+ date")
                             .font(.caption)
                             .foregroundStyle(DooStyle.textTertiary)
+                            .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                            .padding(.vertical, DooStyle.Spacing.xs)
+                            .background(DooStyle.tagBg.opacity(0.5))
+                            .clipShape(Capsule())
                     }
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: Binding(
+                    get: { dueDatePopoverTaskID == task.id },
+                    set: { if !$0 { dueDatePopoverTaskID = nil } }
+                )) {
+                    InlineDueDateEditor(task: task, store: store)
                 }
                 .tableCell()
             }
@@ -326,6 +406,153 @@ struct TodoListView: View {
         withAnimation { store.addTask(task) }
         newTaskInput = ""
         isInputFocused = true
+    }
+}
+
+private struct InlineTagEditor: View {
+    @State private var tags: [String]
+    let taskID: UUID
+    let store: TaskStore
+    @State private var newTag = ""
+    @FocusState private var isFieldFocused: Bool
+
+    init(task: DooTask, store: TaskStore) {
+        self._tags = State(initialValue: task.tags)
+        self.taskID = task.id
+        self.store = store
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DooStyle.Spacing.sm) {
+            if !tags.isEmpty {
+                FlowLayout(spacing: DooStyle.Spacing.xs) {
+                    ForEach(tags, id: \.self) { tag in
+                        HStack(spacing: 2) {
+                            Text(tag).font(.caption)
+                            Button {
+                                removeTag(tag)
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.caption2)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                        .padding(.vertical, DooStyle.Spacing.xs)
+                        .background(DooStyle.tagBg)
+                        .clipShape(Capsule())
+                    }
+                }
+            }
+
+            TextField("Add tag", text: $newTag)
+                .textFieldStyle(.roundedBorder)
+                .focused($isFieldFocused)
+                .onSubmit { addTag() }
+                .frame(width: 160)
+        }
+        .padding(DooStyle.Spacing.md)
+        .onAppear { isFieldFocused = true }
+    }
+
+    private func addTag() {
+        let tag = newTag.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !tag.isEmpty, !tags.contains(tag) else { return }
+        tags.append(tag)
+        newTag = ""
+        save()
+    }
+
+    private func removeTag(_ tag: String) {
+        tags.removeAll { $0 == tag }
+        save()
+    }
+
+    private func save() {
+        guard let index = store.activeTasks.firstIndex(where: { $0.id == taskID }) else { return }
+        var updated = store.activeTasks[index]
+        updated.tags = tags
+        store.updateTask(updated)
+    }
+}
+
+private struct InlineStatusEditor: View {
+    let task: DooTask
+    let store: TaskStore
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(PipelineStatus.allCases) { status in
+                Button {
+                    var updated = task
+                    updated.status = status
+                    store.updateTask(updated)
+                    dismiss()
+                } label: {
+                    HStack {
+                        Text(status.displayName)
+                            .font(.callout)
+                        Spacer()
+                        if task.status == status {
+                            Image(systemName: "checkmark")
+                                .font(.caption)
+                                .foregroundStyle(DooStyle.accent)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .padding(.horizontal, DooStyle.Spacing.md)
+                    .padding(.vertical, DooStyle.Spacing.sm)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .frame(minWidth: 160)
+    }
+}
+
+private struct InlineDueDateEditor: View {
+    @State private var date: Date
+    @State private var hasDueDate: Bool
+    let taskID: UUID
+    let store: TaskStore
+    @Environment(\.dismiss) private var dismiss
+
+    init(task: DooTask, store: TaskStore) {
+        self._date = State(initialValue: task.dueDate ?? Date())
+        self._hasDueDate = State(initialValue: task.dueDate != nil)
+        self.taskID = task.id
+        self.store = store
+    }
+
+    var body: some View {
+        VStack(spacing: DooStyle.Spacing.sm) {
+            DatePicker("", selection: $date, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+                .onChange(of: date) { _, newDate in
+                    hasDueDate = true
+                    save(date: newDate)
+                }
+            if hasDueDate {
+                Button("Clear Date") {
+                    hasDueDate = false
+                    save(date: nil)
+                    dismiss()
+                }
+                .foregroundStyle(DooStyle.colorRed)
+                .font(.callout)
+                .padding(.bottom, DooStyle.Spacing.xs)
+            }
+        }
+        .padding(DooStyle.Spacing.md)
+    }
+
+    private func save(date: Date?) {
+        guard let index = store.activeTasks.firstIndex(where: { $0.id == taskID }) else { return }
+        var updated = store.activeTasks[index]
+        updated.dueDate = date
+        store.updateTask(updated)
     }
 }
 

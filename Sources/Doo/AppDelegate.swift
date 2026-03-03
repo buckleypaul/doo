@@ -17,7 +17,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func configure(store: TaskStore) {
         self.store = store
-        self.quickAddPanel = QuickAddPanel(store: store)
+        self.quickAddPanel = QuickAddPanel(store: store, onTaskAdded: { [weak self] in
+            self?.flashMenuBarIcon()
+        })
         setupHotKey()
     }
 
@@ -70,5 +72,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func toggleQuickAdd() {
         quickAddPanel?.toggle()
+    }
+
+    private func flashMenuBarIcon() {
+        statusItem?.button?.image = NSImage(systemSymbolName: "checkmark", accessibilityDescription: "Task added")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.statusItem?.button?.image = NSImage(systemSymbolName: "checklist", accessibilityDescription: "Doo")
+        }
     }
 }
