@@ -6,7 +6,7 @@ macOS 15+ todo app. Swift 6 / SwiftUI. Local JSON storage. Includes a CLI (`doo 
 
 ```bash
 swift build -c release          # release build → .build/release/Doo + .build/release/DooCLI
-swift run                        # dev run (GUI)
+swift run Doo                    # dev run (GUI)
 swift run DooCLI                 # dev run (CLI)
 swift test                       # run all tests
 swift test --filter DooTests.InlineSyntaxParserTests  # single suite
@@ -33,6 +33,10 @@ Under `Tests/DooCLITests/`:
 - CLI task store → `CLITaskStoreTests`
 - Task ID resolution → `TaskIDResolverTests`
 - Table formatting → `TableFormatterTests`
+- Due date parsing → `DueDateParserTests`
+- CLI task add command → `TaskAddTests`
+- CLI task edit command → `TaskEditTests`
+- CLI subtask commands → `SubtaskTests`
 
 Run `swift test` and confirm all tests pass before considering any change complete.
 
@@ -72,6 +76,8 @@ Sources/
     Formatting/
       TableFormatter.swift  # Compact table + detail view
       JSONOutput.swift      # --json helpers
+    Utilities/
+      DueDateParser.swift   # Parses "today" / "tomorrow" / "yyyy-MM-dd" → Date
   DooCLI/                  # CLI executable
     DooCommand.swift        # @main entry point
 Tests/

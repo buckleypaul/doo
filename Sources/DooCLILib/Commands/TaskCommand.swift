@@ -13,8 +13,7 @@ public struct TaskCommand: ParsableCommand {
             TaskEditCommand.self,
             TaskDeleteCommand.self,
             SubtaskCommand.self,
-        ],
-        defaultSubcommand: TaskListCommand.self
+        ]
     )
 
     public init() {}
