@@ -84,10 +84,8 @@ struct TaskRowView: View {
 
     private var priorityColor: Color {
         switch task.priority {
-        case 1: .red
-        case 2: .orange
-        case 3: .yellow
-        case 4: .blue
+        case 0: .red
+        case 1: .orange
         default: .gray
         }
     }

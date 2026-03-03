@@ -44,7 +44,7 @@ struct FilterToolbar: View {
 
             // Priority pills
             HStack(spacing: 2) {
-                ForEach([1, 2, 3, 4, 5], id: \.self) { p in
+                ForEach([0, 1, 2], id: \.self) { p in
                     FilterPill("P\(p)", isActive: filterState.selectedPriorities.contains(p)) {
                         if filterState.selectedPriorities.contains(p) {
                             filterState.selectedPriorities.remove(p)

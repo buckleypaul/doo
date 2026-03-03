@@ -17,7 +17,7 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
         title: String,
         description: String? = nil,
         notes: String? = nil,
-        priority: Int = 3,
+        priority: Int = 2,
         tags: [String] = [],
         dueDate: Date? = nil,
         dateAdded: Date = Date(),
@@ -58,7 +58,8 @@ extension DooTask {
         title = try container.decode(String.self, forKey: .title)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 3
+        let rawPriority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 2
+        priority = min(max(0, rawPriority), 2)   // migrate old values (3-5 → 2)
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
         subtasks = try container.decodeIfPresent([Subtask].self, forKey: .subtasks) ?? []
         dateAdded = try container.decode(Date.self, forKey: .dateAdded)

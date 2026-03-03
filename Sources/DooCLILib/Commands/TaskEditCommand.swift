@@ -14,7 +14,7 @@ struct TaskEditCommand: ParsableCommand {
     @Option(name: .long, help: "New title")
     var title: String?
 
-    @Option(name: .long, help: "New priority (1-5)")
+    @Option(name: .long, help: "New priority (0-2)")
     var priority: Int?
 
     @Option(name: .long, help: "Add tag (repeatable)", transform: { $0.lowercased() })
@@ -41,6 +41,7 @@ struct TaskEditCommand: ParsableCommand {
             task.title = t
         }
         if let p = priority {
+            guard (0...2).contains(p) else { throw CLIError.invalidPriority(p) }
             task.priority = p
         }
         if !tag.isEmpty {

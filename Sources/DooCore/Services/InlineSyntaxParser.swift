@@ -5,7 +5,7 @@ public enum InlineSyntaxParser {
     /// Syntax: `title text !N #tag @date /description`
     public static func parse(_ input: String) -> DooTask {
         var remaining = input
-        var priority = 3
+        var priority = 2
         var tags: [String] = []
         var dueDate: Date?
         var description: String?
@@ -17,7 +17,7 @@ public enum InlineSyntaxParser {
         }
 
         // Extract !N priority
-        let priorityPattern = /\s*!([1-5])\s*/
+        let priorityPattern = /\s*!([0-2])\s*/
         if let match = remaining.firstMatch(of: priorityPattern) {
             priority = Int(match.1)!
             remaining = remaining.replacing(priorityPattern, with: " ", maxReplacements: 1)

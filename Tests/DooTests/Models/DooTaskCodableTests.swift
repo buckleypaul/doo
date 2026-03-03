@@ -43,7 +43,7 @@ final class DooTaskCodableTests: XCTestCase {
         XCTAssertEqual(decoded.title, "Minimal")
         XCTAssertNil(decoded.description)
         XCTAssertNil(decoded.notes)
-        XCTAssertEqual(decoded.priority, 3)
+        XCTAssertEqual(decoded.priority, 2)
         XCTAssertTrue(decoded.tags.isEmpty)
         XCTAssertTrue(decoded.subtasks.isEmpty)
         XCTAssertNil(decoded.dueDate)
@@ -120,11 +120,28 @@ final class DooTaskCodableTests: XCTestCase {
         decoder.dateDecodingStrategy = .iso8601
         let task = try decoder.decode(DooTask.self, from: json)
 
-        XCTAssertEqual(task.priority, 3)
+        XCTAssertEqual(task.priority, 2)
         XCTAssertTrue(task.tags.isEmpty)
         XCTAssertTrue(task.subtasks.isEmpty)
         XCTAssertNil(task.description)
         XCTAssertNil(task.notes)
+    }
+
+    func testDecodeLegacyPriorityClampedToTwo() throws {
+        let json = """
+        {
+            "id": "550E8400-E29B-41D4-A716-446655440000",
+            "title": "Old task",
+            "priority": 5,
+            "dateAdded": "2026-03-01T10:00:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let task = try decoder.decode(DooTask.self, from: json)
+
+        XCTAssertEqual(task.priority, 2)
     }
 
     func testTaskFileRoundTrip() throws {

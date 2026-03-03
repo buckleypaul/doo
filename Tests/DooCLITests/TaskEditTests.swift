@@ -42,7 +42,10 @@ final class TaskEditTests: XCTestCase {
         let allTasks = store.loadActiveTasks() + store.loadCompletedTasks()
         var task = try TaskIDResolver.resolve(id, in: allTasks)
         if let t = title { task.title = t }
-        if let p = priority { task.priority = p }
+        if let p = priority {
+            guard (0...2).contains(p) else { throw CLIError.invalidPriority(p) }
+            task.priority = p
+        }
         if !addTags.isEmpty {
             task.tags = Array(Set(task.tags + addTags)).sorted()
         }
@@ -68,9 +71,9 @@ final class TaskEditTests: XCTestCase {
     }
 
     func testEditPriority() throws {
-        try makeStore().addTask(DooTask(title: "Task", priority: 3))
-        try editTask(id: "1", priority: 1)
-        XCTAssertEqual(makeStore().loadActiveTasks()[0].priority, 1)
+        try makeStore().addTask(DooTask(title: "Task", priority: 2))
+        try editTask(id: "1", priority: 0)
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].priority, 0)
     }
 
     func testAddTag() throws {
@@ -153,6 +156,13 @@ final class TaskEditTests: XCTestCase {
         try makeStore().addTask(task)
         try editTask(id: "1", notes: "none")
         XCTAssertNil(makeStore().loadActiveTasks()[0].notes)
+    }
+
+    func testInvalidPriorityRejectedOnEdit() throws {
+        try makeStore().addTask(DooTask(title: "Task"))
+        XCTAssertThrowsError(try editTask(id: "1", priority: 5)) { error in
+            XCTAssertEqual(error as? CLIError, CLIError.invalidPriority(5))
+        }
     }
 
     func testEditByUUIDPrefix() throws {

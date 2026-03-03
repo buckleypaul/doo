@@ -24,27 +24,27 @@ final class InlineSyntaxParserTests: XCTestCase {
     // MARK: - Priority
 
     func testParsesPriority() {
-        let task = InlineSyntaxParser.parse("Fix bug !1")
-        XCTAssertEqual(task.priority, 1)
+        let task = InlineSyntaxParser.parse("Fix bug !0")
+        XCTAssertEqual(task.priority, 0)
         XCTAssertEqual(task.title, "Fix bug")
     }
 
-    func testDefaultPriorityIsThree() {
+    func testDefaultPriorityIsTwo() {
         let task = InlineSyntaxParser.parse("No priority here")
-        XCTAssertEqual(task.priority, 3)
+        XCTAssertEqual(task.priority, 2)
     }
 
     func testPriorityInMiddleOfText() {
-        let task = InlineSyntaxParser.parse("Fix !2 the bug")
-        XCTAssertEqual(task.priority, 2)
+        let task = InlineSyntaxParser.parse("Fix !1 the bug")
+        XCTAssertEqual(task.priority, 1)
         XCTAssert(task.title.contains("Fix"))
         XCTAssert(task.title.contains("the bug"))
     }
 
     func testInvalidPriorityIgnored() {
-        let task = InlineSyntaxParser.parse("Task !9")
-        XCTAssertEqual(task.priority, 3)
-        XCTAssert(task.title.contains("!9"))
+        let task = InlineSyntaxParser.parse("Task !3")
+        XCTAssertEqual(task.priority, 2)
+        XCTAssert(task.title.contains("!3"))
     }
 
     // MARK: - Tags
@@ -104,9 +104,9 @@ final class InlineSyntaxParserTests: XCTestCase {
     // MARK: - Combined
 
     func testParsesAllTokensTogether() {
-        let task = InlineSyntaxParser.parse("Fix login bug !1 #backend @tomorrow /check token expiry")
+        let task = InlineSyntaxParser.parse("Fix login bug !0 #backend @tomorrow /check token expiry")
         XCTAssertEqual(task.title, "Fix login bug")
-        XCTAssertEqual(task.priority, 1)
+        XCTAssertEqual(task.priority, 0)
         XCTAssertEqual(task.tags, ["backend"])
         XCTAssertNotNil(task.dueDate)
         XCTAssertEqual(task.description, "check token expiry")
