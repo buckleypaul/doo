@@ -30,7 +30,7 @@ struct QuickAddView: View {
                 hintItem("/text", label: "description")
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(DooStyle.textSecondary)
         }
         .padding(20)
         .frame(width: 520)
@@ -46,7 +46,7 @@ struct QuickAddView: View {
         HStack(spacing: 2) {
             Text(code)
                 .fontWeight(.medium)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DooStyle.textSecondary)
             Text(label)
         }
     }

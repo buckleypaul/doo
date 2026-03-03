@@ -28,7 +28,7 @@ struct DoneListView: View {
             .frame(minWidth: 300, maxWidth: .infinity)
 
             if showDetail {
-                Color(nsColor: .separatorColor)
+                DooStyle.separator
                     .frame(width: 1)
                     .frame(width: 9)
                     .contentShape(Rectangle())
@@ -71,11 +71,11 @@ struct DoneListView: View {
                 TaskDetailView(store: store, task: $store.completedTasks[index])
             } else {
                 Text("Select a task")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DooStyle.textSecondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .background(SidebarMaterial())
+        .background(DooStyle.surface)
     }
 
     @ViewBuilder
@@ -101,7 +101,7 @@ struct DoneListView: View {
                 .width(DooStyle.Size.icon + DooStyle.Spacing.sm)
                 TableColumn("Title", value: \.title) { task in
                     Text(task.title)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DooStyle.textSecondary)
                         .tableCell()
                 }
                 TableColumn("Priority", value: \.priority) { task in
@@ -116,7 +116,7 @@ struct DoneListView: View {
                                 .font(.caption)
                                 .padding(.horizontal, DooStyle.Spacing.sm - 2)
                                 .padding(.vertical, DooStyle.Spacing.xs)
-                                .background(.quaternary)
+                                .background(DooStyle.tagBg)
                                 .clipShape(Capsule())
                         }
                     }
@@ -127,11 +127,11 @@ struct DoneListView: View {
                         if let due = task.dueDate {
                             Text(DateFormatting.dateOnly(due))
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DooStyle.textSecondary)
                         } else {
                             Text("—")
                                 .font(.caption)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(DooStyle.textTertiary)
                         }
                     }
                     .tableCell()
@@ -142,7 +142,7 @@ struct DoneListView: View {
                         if let completed = task.dateCompleted {
                             Text(DateFormatting.relative(completed))
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DooStyle.textSecondary)
                         }
                     }
                     .tableCell()

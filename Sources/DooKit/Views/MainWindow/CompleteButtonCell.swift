@@ -8,7 +8,7 @@ struct CompleteButtonCell: View {
         Button(action: onToggle) {
             Image(systemName: isCompleted ? "checkmark.square.fill" : "square")
                 .font(.body.weight(.regular))
-                .foregroundStyle(isCompleted ? Color.green : Color.secondary)
+                .foregroundStyle(isCompleted ? DooStyle.colorGreen : DooStyle.textSecondary)
         }
         .buttonStyle(.plain)
     }

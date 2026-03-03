@@ -76,7 +76,7 @@ struct TaskDetailView: View {
                         }
                         .padding(.horizontal, DooStyle.Spacing.sm - 2)
                         .padding(.vertical, DooStyle.Spacing.xs)
-                        .background(.quaternary)
+                        .background(DooStyle.tagBg)
                         .clipShape(Capsule())
                     }
                 }

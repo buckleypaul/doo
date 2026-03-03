@@ -9,6 +9,6 @@ struct DeleteButtonCell: View {
                 .font(.caption.weight(.medium))
         }
         .buttonStyle(.plain)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(DooStyle.textSecondary)
     }
 }

@@ -37,7 +37,7 @@ struct TodoListView: View {
             .frame(minWidth: 300, maxWidth: .infinity)
 
             if showDetail {
-                Color(nsColor: .separatorColor)
+                DooStyle.separator
                     .frame(width: 1)
                     .frame(width: 9)
                     .contentShape(Rectangle())
@@ -88,11 +88,11 @@ struct TodoListView: View {
                 TaskDetailView(store: store, task: $store.activeTasks[index])
             } else {
                 Text("Select a task")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DooStyle.textSecondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .background(SidebarMaterial())
+        .background(DooStyle.surface)
     }
 
     @ViewBuilder
@@ -140,17 +140,17 @@ struct TodoListView: View {
                 Text(status.displayName.uppercased())
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DooStyle.textSecondary)
                 Text("\(count)")
                     .font(.caption2)
                     .padding(.horizontal, DooStyle.Spacing.sm - 2)
                     .padding(.vertical, 2)
-                    .background(.quaternary)
+                    .background(DooStyle.tagBg)
                     .clipShape(Capsule())
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DooStyle.textSecondary)
                     .rotationEffect(expanded ? .degrees(90) : .zero)
                     .animation(.easeInOut(duration: 0.15), value: expanded)
             }
@@ -177,7 +177,7 @@ struct TodoListView: View {
             .padding(.vertical, DooStyle.Spacing.xs)
             .background(
                 RoundedRectangle(cornerRadius: DooStyle.Radius.card)
-                    .fill(isSelected ? Color.accentColor.opacity(0.08) : isHovered ? Color.primary.opacity(0.04) : .clear)
+                    .fill(isSelected ? DooStyle.accent.opacity(0.1) : isHovered ? DooStyle.tagBg.opacity(0.6) : .clear)
             )
             .contentShape(Rectangle())
             .onTapGesture { selectedTaskID = task.id }
@@ -201,7 +201,7 @@ struct TodoListView: View {
                             .font(.caption)
                             .padding(.horizontal, DooStyle.Spacing.sm - 2)
                             .padding(.vertical, DooStyle.Spacing.xs)
-                            .background(.quaternary)
+                            .background(DooStyle.tagBg)
                             .clipShape(Capsule())
                     }
                 }
@@ -209,7 +209,7 @@ struct TodoListView: View {
             if let due = task.dueDate {
                 Text(DateFormatting.dateOnly(due))
                     .font(.caption)
-                    .foregroundStyle(DateFormatting.isOverdue(due) ? .red : .secondary)
+                    .foregroundStyle(DateFormatting.isOverdue(due) ? DooStyle.colorRed : DooStyle.textSecondary)
             }
             DeleteButtonCell(
                 onDelete: { withAnimation { store.deleteTask(task) } }
@@ -275,7 +275,7 @@ struct TodoListView: View {
                             .font(.caption)
                             .padding(.horizontal, DooStyle.Spacing.sm - 2)
                             .padding(.vertical, DooStyle.Spacing.xs)
-                            .background(.quaternary)
+                            .background(DooStyle.tagBg)
                             .clipShape(Capsule())
                     }
                 }
@@ -286,11 +286,11 @@ struct TodoListView: View {
                     if let due = task.dueDate {
                         Text(DateFormatting.dateOnly(due))
                             .font(.caption)
-                            .foregroundStyle(DateFormatting.isOverdue(due) ? .red : .secondary)
+                            .foregroundStyle(DateFormatting.isOverdue(due) ? DooStyle.colorRed : DooStyle.textSecondary)
                     } else {
                         Text("—")
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(DooStyle.textTertiary)
                     }
                 }
                 .tableCell()
@@ -299,7 +299,7 @@ struct TodoListView: View {
             TableColumn("Added", value: \.dateAdded) { task in
                 Text(DateFormatting.relative(task.dateAdded))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DooStyle.textSecondary)
                     .tableCell()
             }
             .width(90)
@@ -349,7 +349,7 @@ private struct InlineAddRow: View {
                 Button(action: onSubmit) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: DooStyle.Size.badge))
-                        .foregroundStyle(isInputEmpty ? Color.secondary : Color.accentColor)
+                        .foregroundStyle(isInputEmpty ? DooStyle.textSecondary : DooStyle.accent)
                 }
                 .buttonStyle(.plain)
                 .disabled(isInputEmpty)
@@ -363,7 +363,7 @@ private struct InlineAddRow: View {
                 hintItem("/text", label: "description")
             }
             .font(.caption)
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(DooStyle.textTertiary)
         }
         .padding(.horizontal, DooStyle.Spacing.lg)
         .padding(.vertical, DooStyle.Spacing.sm)
@@ -373,7 +373,7 @@ private struct InlineAddRow: View {
         HStack(spacing: 2) {
             Text(code)
                 .fontWeight(.medium)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DooStyle.textSecondary)
             Text(label)
         }
     }

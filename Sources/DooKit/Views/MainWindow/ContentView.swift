@@ -54,10 +54,12 @@ public struct ContentView: View {
                     .navigationTitle("Settings")
             case nil:
                 Text("Select a section")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DooStyle.textSecondary)
             }
         }
         .frame(minWidth: 600, minHeight: 400)
+        .background(DooStyle.background)
+        .tint(DooStyle.accent)
         .onReceive(NotificationCenter.default.publisher(for: .showSettingsPage)) { _ in
             selection = .settings
         }

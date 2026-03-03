@@ -12,7 +12,7 @@ struct FilterToolbar: View {
             // Search
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DooStyle.textSecondary)
                 TextField("Search tasks...", text: $filterState.searchText)
                     .textFieldStyle(.plain)
                 if !filterState.searchText.isEmpty {
@@ -20,13 +20,13 @@ struct FilterToolbar: View {
                         filterState.searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DooStyle.textSecondary)
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(6)
-            .background(.quaternary)
+            .background(DooStyle.tagBg)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .frame(maxWidth: 250)
 
@@ -108,8 +108,8 @@ private struct FilterPill: View {
                 .font(.callout)
                 .padding(.horizontal, DooStyle.Spacing.sm)
                 .padding(.vertical, DooStyle.Spacing.xs)
-                .background(isActive ? Color.accentColor : Color.secondary.opacity(0.1))
-                .foregroundStyle(isActive ? Color(nsColor: .alternateSelectedControlTextColor) : Color.primary)
+                .background(isActive ? DooStyle.accent : DooStyle.tagBg.opacity(0.6))
+                .foregroundStyle(isActive ? DooStyle.background : DooStyle.textPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: DooStyle.Radius.pill))
         }
         .buttonStyle(.plain)
