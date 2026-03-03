@@ -154,7 +154,7 @@ Both data paths are configurable in Settings. All paths are persisted in `~/.con
 
 - `dueDate` — date-only string `yyyy-MM-dd` (not ISO 8601)
 - `dateAdded` / `dateCompleted` — ISO 8601 with seconds
-- `priority` — integer 1 (highest) to 5 (lowest), default 3
+- `priority` — integer 0 (highest) to 2 (lowest), default 2
 - `subtasks` — array of `{id, title, completed}`
 
 The GUI **live-reloads** within ~100 ms when JSON files change externally (including CLI edits).
@@ -162,7 +162,7 @@ The GUI **live-reloads** within ~100 ms when JSON files change externally (inclu
 ## Quick-add syntax (InlineSyntaxParser)
 
 ```
-title text [!1-5] [#tag …] [@today|tomorrow|yyyy-MM-dd] [/description text]
+title text [!0-2] [#tag …] [@today|tomorrow|yyyy-MM-dd] [/description text]
 ```
 
 Example: `Fix login bug !1 #backend @tomorrow /check token expiry`

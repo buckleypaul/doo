@@ -26,11 +26,9 @@ struct TaskDetailView: View {
 
             Section("Priority") {
                 Picker("Priority", selection: $task.priority) {
-                    Text("1 — Highest").tag(1)
-                    Text("2 — High").tag(2)
-                    Text("3 — Medium").tag(3)
-                    Text("4 — Low").tag(4)
-                    Text("5 — Lowest").tag(5)
+                    Text("P0").tag(0)
+                    Text("P1").tag(1)
+                    Text("P2").tag(2)
                 }
                 .pickerStyle(.segmented)
             }

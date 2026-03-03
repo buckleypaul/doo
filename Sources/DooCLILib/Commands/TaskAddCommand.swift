@@ -11,7 +11,7 @@ struct TaskAddCommand: ParsableCommand {
     @Argument(help: "Task title (supports inline syntax: \"title !N #tag @date /description\")")
     var input: String
 
-    @Option(name: .long, help: "Priority (1-5)")
+    @Option(name: .long, help: "Priority (0-2)")
     var priority: Int?
 
     @Option(name: .long, help: "Tag (repeatable)", transform: { $0.lowercased() })
@@ -29,6 +29,7 @@ struct TaskAddCommand: ParsableCommand {
 
         // Override/merge with explicit flags
         if let p = priority {
+            guard (0...2).contains(p) else { throw CLIError.invalidPriority(p) }
             task.priority = p
         }
         if !tag.isEmpty {

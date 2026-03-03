@@ -9,10 +9,10 @@ final class FilterStateTests: XCTestCase {
     override func setUp() {
         super.setUp()
         tasks = [
-            sampleTask(title: "Buy milk", priority: 3, tags: ["grocery"]),
-            sampleTask(title: "Fix login bug", priority: 1, tags: ["backend", "urgent"]),
-            sampleTask(title: "Write docs", priority: 2, tags: ["docs"]),
-            sampleTask(title: "Deploy app", priority: 4, tags: ["backend"]),
+            sampleTask(title: "Buy milk", priority: 2, tags: ["grocery"]),
+            sampleTask(title: "Fix login bug", priority: 0, tags: ["backend", "urgent"]),
+            sampleTask(title: "Write docs", priority: 1, tags: ["docs"]),
+            sampleTask(title: "Deploy app", priority: 2, tags: ["backend"]),
         ]
     }
 
@@ -44,10 +44,10 @@ final class FilterStateTests: XCTestCase {
     }
 
     func testFilterBySelectedPriorities() {
-        let filter = FilterState(selectedPriorities: [1, 2])
+        let filter = FilterState(selectedPriorities: [0, 1])
         let result = filter.apply(to: tasks)
         XCTAssertEqual(result.count, 2)
-        XCTAssertTrue(result.allSatisfy { [1, 2].contains($0.priority) })
+        XCTAssertTrue(result.allSatisfy { [0, 1].contains($0.priority) })
     }
 
     func testEmptySelectedPrioritiesReturnsAll() {
@@ -57,11 +57,11 @@ final class FilterStateTests: XCTestCase {
     }
 
     func testNonContiguousPrioritySelection() {
-        // tasks fixture: p1 "Fix login bug", p2 "Write docs", p3 "Buy milk", p4 "Deploy app"
-        let filter = FilterState(selectedPriorities: [1, 3])
+        // tasks fixture: p0 "Fix login bug", p1 "Write docs", p2 "Buy milk", p2 "Deploy app"
+        let filter = FilterState(selectedPriorities: [0, 2])
         let result = filter.apply(to: tasks)
-        XCTAssertEqual(result.count, 2)
-        XCTAssertTrue(result.allSatisfy { [1, 3].contains($0.priority) })
+        XCTAssertEqual(result.count, 3)
+        XCTAssertTrue(result.allSatisfy { [0, 2].contains($0.priority) })
     }
 
     func testFilterOverdueOnly() {
@@ -140,7 +140,7 @@ final class FilterStateTests: XCTestCase {
     }
 
     func testCombinedSearchAndPriorityFilter() {
-        let filter = FilterState(searchText: "bug", selectedPriorities: [1, 2])
+        let filter = FilterState(searchText: "bug", selectedPriorities: [0, 1])
         let result = filter.apply(to: tasks)
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result[0].title, "Fix login bug")

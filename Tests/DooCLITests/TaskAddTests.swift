@@ -36,7 +36,10 @@ final class TaskAddTests: XCTestCase {
         description: String? = nil
     ) throws {
         var task = InlineSyntaxParser.parse(input)
-        if let p = priority { task.priority = p }
+        if let p = priority {
+            guard (0...2).contains(p) else { throw CLIError.invalidPriority(p) }
+            task.priority = p
+        }
         if !tags.isEmpty {
             task.tags = Array(Set(task.tags + tags)).sorted()
         }
@@ -46,25 +49,25 @@ final class TaskAddTests: XCTestCase {
     }
 
     func testAddWithInlineSyntax() throws {
-        try addTask(input: "Buy milk !1 #grocery")
+        try addTask(input: "Buy milk !0 #grocery")
         let tasks = makeStore().loadActiveTasks()
         XCTAssertEqual(tasks.count, 1)
         XCTAssertEqual(tasks[0].title, "Buy milk")
-        XCTAssertEqual(tasks[0].priority, 1)
+        XCTAssertEqual(tasks[0].priority, 0)
         XCTAssertEqual(tasks[0].tags, ["grocery"])
     }
 
     func testAddWithFlagsOnly() throws {
-        try addTask(input: "Plain title", priority: 2, tags: ["work"])
+        try addTask(input: "Plain title", priority: 1, tags: ["work"])
         let task = makeStore().loadActiveTasks()[0]
         XCTAssertEqual(task.title, "Plain title")
-        XCTAssertEqual(task.priority, 2)
+        XCTAssertEqual(task.priority, 1)
         XCTAssertEqual(task.tags, ["work"])
     }
 
     func testFlagPriorityOverridesInlinePriority() throws {
-        try addTask(input: "Task !3", priority: 1)
-        XCTAssertEqual(makeStore().loadActiveTasks()[0].priority, 1)
+        try addTask(input: "Task !2", priority: 0)
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].priority, 0)
     }
 
     func testTagsMergeFromInlineAndFlags() throws {
@@ -115,9 +118,15 @@ final class TaskAddTests: XCTestCase {
         XCTAssertEqual(makeStore().loadActiveTasks()[0].description, "this is the description")
     }
 
-    func testDefaultPriorityIsThree() throws {
+    func testDefaultPriorityIsTwo() throws {
         try addTask(input: "Task")
-        XCTAssertEqual(makeStore().loadActiveTasks()[0].priority, 3)
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].priority, 2)
+    }
+
+    func testInvalidPriorityRejected() throws {
+        XCTAssertThrowsError(try addTask(input: "Task", priority: 3)) { error in
+            XCTAssertEqual(error as? CLIError, CLIError.invalidPriority(3))
+        }
     }
 
     func testMultipleTasksStoredInOrder() throws {
