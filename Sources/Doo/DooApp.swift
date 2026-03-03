@@ -9,6 +9,11 @@ struct DooApp: App {
 
     init() {
         let s = SettingsManager.shared
+        // Ensure the data directory exists before TaskStore opens files
+        let todoDir = URL(fileURLWithPath: s.todoFilePath).deletingLastPathComponent()
+        let doneDir = URL(fileURLWithPath: s.doneFilePath).deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: todoDir, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: doneDir, withIntermediateDirectories: true)
         _store = State(initialValue: TaskStore(todoPath: s.todoFilePath, donePath: s.doneFilePath))
     }
 
