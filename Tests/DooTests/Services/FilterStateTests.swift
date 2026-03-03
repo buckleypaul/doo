@@ -83,6 +83,7 @@ final class FilterStateTests: XCTestCase {
         let result = filter.apply(to: tasks)
         XCTAssertLessThanOrEqual(result[0].priority, result[1].priority)
         XCTAssertLessThanOrEqual(result[1].priority, result[2].priority)
+        XCTAssertLessThanOrEqual(result[2].priority, result[3].priority)
     }
 
     func testSortAlphabetical() {
@@ -104,6 +105,7 @@ final class FilterStateTests: XCTestCase {
         let filter = FilterState(sortOption: .dateAddedNewest)
         let result = filter.apply(to: tasksWithDates)
         XCTAssertEqual(result[0].title, "Newest")
+        XCTAssertEqual(result[1].title, "Middle")
         XCTAssertEqual(result[2].title, "Oldest")
     }
 
@@ -119,6 +121,21 @@ final class FilterStateTests: XCTestCase {
         let result = filter.apply(to: tasksWithDates)
         XCTAssertEqual(result[0].title, "Tomorrow")
         XCTAssertEqual(result[1].title, "Next week")
+        XCTAssertEqual(result[2].title, "No date")
+    }
+
+    func testSortDateCompleted() {
+        let now = Date()
+        let earlier = now.addingTimeInterval(-3600)
+        let tasksWithCompletion = [
+            sampleTask(title: "Earlier", dateCompleted: earlier),
+            sampleTask(title: "Recent", dateCompleted: now),
+            sampleTask(title: "No date"),
+        ]
+        let filter = FilterState(sortOption: .dateCompleted)
+        let result = filter.apply(to: tasksWithCompletion)
+        XCTAssertEqual(result[0].title, "Recent")
+        XCTAssertEqual(result[1].title, "Earlier")
         XCTAssertEqual(result[2].title, "No date")
     }
 
