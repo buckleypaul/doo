@@ -5,7 +5,6 @@ struct FilterToolbar: View {
     let availableTags: [String]
 
     @State private var showTagsPopover = false
-    @State private var tagSearch = ""
 
     var body: some View {
         HStack(spacing: 8) {
@@ -58,23 +57,18 @@ struct FilterToolbar: View {
                 }
             }
 
-            // Tags pill
+            // Tags dropdown
             if !availableTags.isEmpty {
-                let label = filterState.selectedTags.isEmpty
-                    ? "Tags"
-                    : "Tags (\(filterState.selectedTags.count))"
-                FilterPill(label, isActive: !filterState.selectedTags.isEmpty) {
+                let isActive = !filterState.selectedTags.isEmpty
+                let label = isActive ? "Tags (\(filterState.selectedTags.count))" : "Tags"
+                FilterPill(label, isActive: isActive) {
                     showTagsPopover.toggle()
                 }
-                .popover(isPresented: $showTagsPopover) {
-                    TagsPopover(
+                .popover(isPresented: $showTagsPopover, arrowEdge: .bottom) {
+                    TagsDropdown(
                         availableTags: availableTags,
-                        selectedTags: $filterState.selectedTags,
-                        search: $tagSearch
+                        selectedTags: $filterState.selectedTags
                     )
-                }
-                .onChange(of: showTagsPopover) { _, isPresented in
-                    if !isPresented { tagSearch = "" }
                 }
             }
 
@@ -116,40 +110,73 @@ private struct FilterPill: View {
     }
 }
 
-// MARK: - TagsPopover
+// MARK: - TagsDropdown
 
-private struct TagsPopover: View {
+private struct TagsDropdown: View {
     let availableTags: [String]
     @Binding var selectedTags: Set<String>
-    @Binding var search: String
 
-    private var filteredTags: [String] {
-        search.isEmpty ? availableTags : availableTags.filter {
-            $0.localizedCaseInsensitiveContains(search)
-        }
+    @State private var hoveredTag: String? = nil
+    @State private var hoveringSelectAll = false
+
+    private var allSelected: Bool {
+        !availableTags.isEmpty && availableTags.allSatisfy { selectedTags.contains($0) }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if availableTags.count > 12 {
-                TextField("Search tags...", text: $search)
-                    .textFieldStyle(.roundedBorder)
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(availableTags, id: \.self) { tag in
+                tagRow(tag)
             }
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 6) {
-                    ForEach(filteredTags, id: \.self) { tag in
-                        FilterPill(tag, isActive: selectedTags.contains(tag)) {
-                            if selectedTags.contains(tag) {
-                                selectedTags.remove(tag)
-                            } else {
-                                selectedTags.insert(tag)
-                            }
-                        }
-                    }
-                }
-            }
+            Divider()
+                .padding(.vertical, 2)
+            selectAllRow
         }
-        .padding(12)
-        .frame(minWidth: 200, maxWidth: 300, maxHeight: 300)
+        .padding(.vertical, 4)
+        .frame(minWidth: 160)
+    }
+
+    private func tagRow(_ tag: String) -> some View {
+        let isSelected = selectedTags.contains(tag)
+        return Button {
+            if isSelected { selectedTags.remove(tag) } else { selectedTags.insert(tag) }
+        } label: {
+            HStack(spacing: DooStyle.Spacing.sm) {
+                Image(systemName: "checkmark")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(DooStyle.accent)
+                    .opacity(isSelected ? 1 : 0)
+                    .frame(width: 12)
+                Text(tag)
+                    .foregroundStyle(DooStyle.textPrimary)
+                Spacer()
+            }
+            .padding(.horizontal, DooStyle.Spacing.md)
+            .padding(.vertical, DooStyle.Spacing.xs + 1)
+            .background(hoveredTag == tag ? DooStyle.tagBg : Color.clear)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hoveredTag = $0 ? tag : nil }
+    }
+
+    private var selectAllRow: some View {
+        Button {
+            if allSelected { selectedTags.removeAll() }
+            else { selectedTags = Set(availableTags) }
+        } label: {
+            HStack(spacing: DooStyle.Spacing.sm) {
+                Color.clear.frame(width: 12)
+                Text(allSelected ? "Deselect All" : "Select All")
+                    .foregroundStyle(DooStyle.textSecondary)
+                Spacer()
+            }
+            .padding(.horizontal, DooStyle.Spacing.md)
+            .padding(.vertical, DooStyle.Spacing.xs + 1)
+            .background(hoveringSelectAll ? DooStyle.tagBg : Color.clear)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hoveringSelectAll = $0 }
     }
 }
