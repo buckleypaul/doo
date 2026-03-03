@@ -109,7 +109,7 @@ private struct FilterPill: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(isActive ? Color.accentColor : Color.primary.opacity(0.1))
-                .foregroundStyle(isActive ? Color.white : Color.primary)
+                .foregroundStyle(isActive ? Color(nsColor: .alternateSelectedControlTextColor) : Color.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
         }
         .buttonStyle(.plain)

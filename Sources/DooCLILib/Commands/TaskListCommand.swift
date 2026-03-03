@@ -39,7 +39,7 @@ struct TaskListCommand: ParsableCommand {
         let store = CLITaskStore()
         let tasks = done ? store.loadCompletedTasks() : store.loadActiveTasks()
 
-        let filter = buildFilterState()
+        let filter = try buildFilterState()
         let filtered = filter.apply(to: tasks)
 
         if json {
@@ -49,13 +49,30 @@ struct TaskListCommand: ParsableCommand {
         }
     }
 
-    private func buildFilterState() -> FilterState {
+    func buildFilterState() throws -> FilterState {
         var selectedPriorities: Set<Int> = []
         if let p = priority {
+            guard (1...5).contains(p) else {
+                throw ValidationError("--priority (\(p)) must be between 1 and 5")
+            }
             selectedPriorities = [p]
         } else {
+            if let minP = minPriority {
+                guard (1...5).contains(minP) else {
+                    throw ValidationError("--min-priority (\(minP)) must be between 1 and 5")
+                }
+            }
+            if let maxP = maxPriority {
+                guard (1...5).contains(maxP) else {
+                    throw ValidationError("--max-priority (\(maxP)) must be between 1 and 5")
+                }
+            }
             if let minP = minPriority, let maxP = maxPriority {
-                selectedPriorities = Set(minP...maxP)
+                if minP <= maxP {
+                    selectedPriorities = Set(minP...maxP)
+                } else {
+                    throw ValidationError("--min-priority (\(minP)) must be ≤ --max-priority (\(maxP))")
+                }
             } else if let minP = minPriority {
                 selectedPriorities = Set(minP...5)
             } else if let maxP = maxPriority {
