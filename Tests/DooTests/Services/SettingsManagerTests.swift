@@ -29,4 +29,22 @@ final class SettingsManagerTests: XCTestCase {
         XCTAssertTrue(manager.hotkeyEnabled)
         XCTAssertFalse(manager.launchAtLogin)
     }
+
+    func testRoundTrip() throws {
+        let manager = SettingsManager(configURL: configURL)
+        manager.hotkeyEnabled = false
+        manager.todoFilePath = tempDir.appendingPathComponent("custom-todo.json").path
+
+        // Re-init from the same file
+        let manager2 = SettingsManager(configURL: configURL)
+        XCTAssertFalse(manager2.hotkeyEnabled)
+        XCTAssertEqual(manager2.todoFilePath, manager.todoFilePath)
+    }
+
+    func testCorruptFileFallsBackToDefaults() throws {
+        try "not valid json {{{{".write(to: configURL, atomically: true, encoding: .utf8)
+        let manager = SettingsManager(configURL: configURL)
+        XCTAssertTrue(manager.hotkeyEnabled)
+        XCTAssertTrue(manager.todoFilePath.hasSuffix("/.local/share/doo/todo.json"))
+    }
 }
