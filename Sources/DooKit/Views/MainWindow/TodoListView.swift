@@ -6,9 +6,11 @@ struct TodoListView: View {
     @State private var taskToDelete: DooTask?
     @State private var newTaskInput = ""
     @FocusState private var isInputFocused: Bool
+    @State private var selectedTaskID: DooTask.ID?
+    @State private var sortOrder = [KeyPathComparator(\DooTask.priority)]
 
-    private var filteredTasks: [DooTask] {
-        filterState.apply(to: store.activeTasks)
+    private var displayedTasks: [DooTask] {
+        filterState.apply(to: store.activeTasks).sorted(using: sortOrder)
     }
 
     private var allTags: [String] {
@@ -18,55 +20,27 @@ struct TodoListView: View {
     var body: some View {
         VStack(spacing: 0) {
             FilterToolbar(filterState: $filterState, availableTags: allTags)
-
             Divider()
-
             InlineAddRow(input: $newTaskInput, isFocused: $isInputFocused) {
                 submitNewTask()
             }
-
             Divider()
-
-            if filteredTasks.isEmpty {
-                ContentUnavailableView(
-                    store.activeTasks.isEmpty ? "No Tasks" : "No Matches",
-                    systemImage: store.activeTasks.isEmpty ? "checkmark.circle" : "magnifyingglass",
-                    description: Text(store.activeTasks.isEmpty ? "Add a task to get started." : "Try adjusting your filters.")
-                )
-                .frame(maxHeight: .infinity)
+            taskContent
+        }
+        .inspector(isPresented: Binding(
+            get: { selectedTaskID != nil },
+            set: { if !$0 { selectedTaskID = nil } }
+        )) {
+            if let id = selectedTaskID,
+               let index = store.activeTasks.firstIndex(where: { $0.id == id }) {
+                TaskDetailView(store: store, task: $store.activeTasks[index])
             } else {
-                List {
-                    ForEach(filteredTasks) { task in
-                        if let index = store.activeTasks.firstIndex(where: { $0.id == task.id }) {
-                            DisclosureGroup {
-                                TaskDetailView(store: store, task: $store.activeTasks[index])
-                            } label: {
-                                TaskRowView(task: task) {
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        store.completeTask(task)
-                                    }
-                                }
-                            }
-                            .contextMenu {
-                                Button("Complete") {
-                                    withAnimation { store.completeTask(task) }
-                                }
-                                Divider()
-                                Button("Delete", role: .destructive) {
-                                    taskToDelete = task
-                                }
-                            }
-                        }
-                    }
-                    .onDelete { indexSet in
-                        for index in indexSet {
-                            let task = filteredTasks[index]
-                            taskToDelete = task
-                        }
-                    }
-                }
+                Text("Select a task")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .inspectorColumnWidth(min: 260, ideal: 320, max: 420)
         .alert("Delete Task?", isPresented: Binding(
             get: { taskToDelete != nil },
             set: { if !$0 { taskToDelete = nil } }
@@ -85,13 +59,86 @@ struct TodoListView: View {
         }
     }
 
+    @ViewBuilder
+    private var taskContent: some View {
+        if displayedTasks.isEmpty {
+            ContentUnavailableView(
+                store.activeTasks.isEmpty ? "No Tasks" : "No Matches",
+                systemImage: store.activeTasks.isEmpty ? "checkmark.circle" : "magnifyingglass",
+                description: Text(store.activeTasks.isEmpty ? "Add a task to get started." : "Try adjusting your filters.")
+            )
+            .frame(maxHeight: .infinity)
+        } else {
+            Table(displayedTasks, selection: $selectedTaskID, sortOrder: $sortOrder) {
+                TableColumn("Title", value: \.title) { task in
+                    Text(task.title)
+                }
+                TableColumn("Priority", value: \.priority) { task in
+                    let color = DooStyle.priorityColor(for: task.priority)
+                    Text("P\(task.priority)")
+                        .font(.caption2.weight(.bold))
+                        .frame(width: DooStyle.Size.badge, height: DooStyle.Size.badge)
+                        .background(color.opacity(0.2))
+                        .foregroundStyle(color)
+                        .clipShape(RoundedRectangle(cornerRadius: DooStyle.Radius.badge))
+                }
+                .width(70)
+                TableColumn("Tags") { task in
+                    HStack(spacing: DooStyle.Spacing.xs) {
+                        ForEach(task.tags, id: \.self) { tag in
+                            Text(tag)
+                                .font(.caption)
+                                .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                                .padding(.vertical, DooStyle.Spacing.xs)
+                                .background(.quaternary)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                TableColumn("Due", value: \.dueDateSortKey) { task in
+                    if let due = task.dueDate {
+                        Text(DateFormatting.dateOnly(due))
+                            .font(.caption)
+                            .foregroundStyle(DateFormatting.isOverdue(due) ? .red : .secondary)
+                    } else {
+                        Text("—")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .width(100)
+                TableColumn("Added", value: \.dateAdded) { task in
+                    Text(DateFormatting.relative(task.dateAdded))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .width(90)
+            }
+            .contextMenu(forSelectionType: DooTask.ID.self) { ids in
+                if let id = ids.first,
+                   let task = store.activeTasks.first(where: { $0.id == id }) {
+                    Button("Complete") {
+                        withAnimation { store.completeTask(task) }
+                    }
+                    Divider()
+                    Button("Delete", role: .destructive) {
+                        taskToDelete = task
+                    }
+                }
+            }
+            .onChange(of: store.activeTasks) { _, tasks in
+                if let id = selectedTaskID, !tasks.contains(where: { $0.id == id }) {
+                    selectedTaskID = nil
+                }
+            }
+        }
+    }
+
     private func submitNewTask() {
         let trimmed = newTaskInput.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
         let task = InlineSyntaxParser.parse(trimmed)
-        withAnimation {
-            store.addTask(task)
-        }
+        withAnimation { store.addTask(task) }
         newTaskInput = ""
         isInputFocused = true
     }
@@ -107,8 +154,8 @@ private struct InlineAddRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: DooStyle.Spacing.xs) {
+            HStack(spacing: DooStyle.Spacing.sm) {
                 TextField("Add a task...", text: $input)
                     .textFieldStyle(.plain)
                     .focused(isFocused)
@@ -116,14 +163,14 @@ private struct InlineAddRow: View {
 
                 Button(action: onSubmit) {
                     Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 18))
+                        .font(.system(size: DooStyle.Size.badge))
                         .foregroundStyle(isInputEmpty ? Color.secondary : Color.accentColor)
                 }
                 .buttonStyle(.plain)
                 .disabled(isInputEmpty)
             }
 
-            HStack(spacing: 16) {
+            HStack(spacing: DooStyle.Spacing.lg) {
                 hintItem("!0-2", label: "priority")
                 hintItem("#tag", label: "tag")
                 hintItem("@today", label: "or @tomorrow")
