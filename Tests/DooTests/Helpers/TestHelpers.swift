@@ -19,7 +19,7 @@ func sampleTask(
     title: String = "Test Task",
     description: String? = nil,
     notes: String? = nil,
-    priority: Int = 3,
+    priority: Int = 2,
     tags: [String] = [],
     dueDate: Date? = nil,
     dateAdded: Date = Date(),

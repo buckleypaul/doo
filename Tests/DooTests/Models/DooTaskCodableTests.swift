@@ -35,6 +35,8 @@ final class DooTaskCodableTests: XCTestCase {
         XCTAssertEqual(decoded.subtasks.count, 1)
         XCTAssertEqual(decoded.subtasks[0].title, "Sub 1")
         XCTAssertTrue(decoded.subtasks[0].completed)
+        XCTAssertEqual(decoded.dueDate, task.dueDate)
+        XCTAssertNotNil(decoded.dateCompleted)
     }
 
     func testRoundTripMinimalFields() throws {

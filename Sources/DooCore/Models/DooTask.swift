@@ -104,6 +104,7 @@ extension DooTask {
     /// Sort key for dueDate — nil tasks sort after dated tasks
     public var dueDateSortKey: Date { dueDate ?? .distantFuture }
 
-    /// Sort key for dateCompleted — nil tasks sort before completed tasks
+    /// Sort key for dateCompleted — uses .distantPast for nil so uncompleted tasks
+    /// sort first in ascending order. For most-recently-completed first, sort descending.
     public var dateCompletedSortKey: Date { dateCompleted ?? .distantPast }
 }
