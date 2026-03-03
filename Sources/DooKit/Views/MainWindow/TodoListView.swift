@@ -41,6 +41,11 @@ struct TodoListView: View {
             }
         }
         .inspectorColumnWidth(min: 260, ideal: 320, max: 420)
+        .onChange(of: store.activeTasks) { _, tasks in
+            if let id = selectedTaskID, !tasks.contains(where: { $0.id == id }) {
+                selectedTaskID = nil
+            }
+        }
         .alert("Delete Task?", isPresented: Binding(
             get: { taskToDelete != nil },
             set: { if !$0 { taskToDelete = nil } }
@@ -124,11 +129,6 @@ struct TodoListView: View {
                     Button("Delete", role: .destructive) {
                         taskToDelete = task
                     }
-                }
-            }
-            .onChange(of: store.activeTasks) { _, tasks in
-                if let id = selectedTaskID, !tasks.contains(where: { $0.id == id }) {
-                    selectedTaskID = nil
                 }
             }
         }
