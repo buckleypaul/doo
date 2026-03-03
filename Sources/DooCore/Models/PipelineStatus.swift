@@ -1,7 +1,7 @@
 import Foundation
 
 public enum PipelineStatus: String, Codable, CaseIterable, Identifiable, Sendable {
-    case untriaged
+    case triage
     case backlog
     case inProgress = "in_progress"
     case inReview = "in_review"
@@ -10,7 +10,7 @@ public enum PipelineStatus: String, Codable, CaseIterable, Identifiable, Sendabl
 
     public var displayName: String {
         switch self {
-        case .untriaged: return "Untriaged"
+        case .triage: return "Triage"
         case .backlog: return "Backlog"
         case .inProgress: return "In Progress"
         case .inReview: return "In Review"
@@ -24,7 +24,8 @@ public enum PipelineStatus: String, Codable, CaseIterable, Identifiable, Sendabl
             .replacingOccurrences(of: " ", with: "")
 
         switch normalized {
-        case "untriaged": return .untriaged
+        case "triage":    return .triage
+        case "untriaged": return .triage   // backward compat
         case "backlog": return .backlog
         case "inprogress": return .inProgress
         case "inreview": return .inReview

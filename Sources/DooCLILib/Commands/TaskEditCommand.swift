@@ -32,7 +32,7 @@ struct TaskEditCommand: ParsableCommand {
     @Option(name: .long, help: "Set notes (or 'none' to clear)")
     var notes: String?
 
-    @Option(name: .long, help: "Pipeline status (untriaged, backlog, inprogress, inreview)")
+    @Option(name: .long, help: "Pipeline status (triage, backlog, inprogress, inreview)")
     var status: String?
 
     func run() throws {

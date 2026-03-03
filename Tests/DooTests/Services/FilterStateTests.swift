@@ -148,7 +148,7 @@ final class FilterStateTests: XCTestCase {
 
     func testFilterBySingleStatus() {
         let tasksWithStatus = [
-            sampleTask(title: "A", status: .untriaged),
+            sampleTask(title: "A", status: .triage),
             sampleTask(title: "B", status: .backlog),
             sampleTask(title: "C", status: .inProgress),
         ]
@@ -160,7 +160,7 @@ final class FilterStateTests: XCTestCase {
 
     func testFilterByMultipleStatuses() {
         let tasksWithStatus = [
-            sampleTask(title: "A", status: .untriaged),
+            sampleTask(title: "A", status: .triage),
             sampleTask(title: "B", status: .backlog),
             sampleTask(title: "C", status: .inProgress),
             sampleTask(title: "D", status: .inReview),
@@ -174,7 +174,7 @@ final class FilterStateTests: XCTestCase {
 
     func testEmptyStatusSetReturnsAll() {
         let tasksWithStatus = [
-            sampleTask(title: "A", status: .untriaged),
+            sampleTask(title: "A", status: .triage),
             sampleTask(title: "B", status: .backlog),
         ]
         let filter = FilterState(selectedStatuses: [])

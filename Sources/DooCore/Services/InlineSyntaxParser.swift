@@ -9,7 +9,7 @@ public enum InlineSyntaxParser {
         var tags: [String] = []
         var dueDate: Date?
         var description: String?
-        var status: PipelineStatus = .untriaged
+        var status: PipelineStatus = .triage
 
         // Extract /description (everything after first standalone /)
         if let slashRange = remaining.range(of: " /") {

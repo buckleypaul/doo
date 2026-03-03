@@ -57,11 +57,18 @@ final class TaskMoveTests: XCTestCase {
         XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .inReview)
     }
 
-    func testMoveToUntriaged() throws {
+    func testMoveToTriage() throws {
         let task = DooTask(title: "Task", status: .backlog)
         try makeStore().addTask(task)
-        try moveTask(id: "1", status: "untriaged")
-        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .untriaged)
+        try moveTask(id: "1", status: "triage")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .triage)
+    }
+
+    func testMoveToTriageViaLegacyUntriaged() throws {
+        let task = DooTask(title: "Task", status: .backlog)
+        try makeStore().addTask(task)
+        try moveTask(id: "1", status: "untriaged")   // backward compat
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .triage)
     }
 
     func testInvalidStatusThrows() throws {

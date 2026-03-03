@@ -166,7 +166,7 @@ final class DooTaskCodableTests: XCTestCase {
         XCTAssertEqual(decoded.status, .inProgress)
     }
 
-    func testMissingStatusDecodesAsUntriaged() throws {
+    func testMissingStatusDecodesAsTriage() throws {
         let json = """
         {
             "id": "550E8400-E29B-41D4-A716-446655440000",
@@ -178,10 +178,10 @@ final class DooTaskCodableTests: XCTestCase {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let task = try decoder.decode(DooTask.self, from: json)
-        XCTAssertEqual(task.status, .untriaged)
+        XCTAssertEqual(task.status, .triage)
     }
 
-    func testUnknownStatusStringDecodesAsUntriaged() throws {
+    func testUnknownStatusStringDecodesAsTriage() throws {
         let json = """
         {
             "id": "550E8400-E29B-41D4-A716-446655440000",
@@ -194,7 +194,23 @@ final class DooTaskCodableTests: XCTestCase {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let task = try decoder.decode(DooTask.self, from: json)
-        XCTAssertEqual(task.status, .untriaged)
+        XCTAssertEqual(task.status, .triage)
+    }
+
+    func testLegacyUntriagedStatusDecodesAsTriage() throws {
+        let json = """
+        {
+            "id": "550E8400-E29B-41D4-A716-446655440000",
+            "title": "Old task",
+            "status": "untriaged",
+            "dateAdded": "2026-03-01T10:00:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let task = try decoder.decode(DooTask.self, from: json)
+        XCTAssertEqual(task.status, .triage)
     }
 
     func testStatusEncodesAsRawString() throws {

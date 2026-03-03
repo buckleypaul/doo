@@ -119,14 +119,14 @@ final class InlineSyntaxParserTests: XCTestCase {
         XCTAssertEqual(task.status, .inReview)
     }
 
-    func testNoStatusTokenDefaultsToUntriaged() {
+    func testNoStatusTokenDefaultsToTriage() {
         let task = InlineSyntaxParser.parse("Task without status")
-        XCTAssertEqual(task.status, .untriaged)
+        XCTAssertEqual(task.status, .triage)
     }
 
-    func testInvalidStatusTokenDefaultsToUntriaged() {
+    func testInvalidStatusTokenDefaultsToTriage() {
         let task = InlineSyntaxParser.parse("Task %invalid")
-        XCTAssertEqual(task.status, .untriaged)
+        XCTAssertEqual(task.status, .triage)
         XCTAssertEqual(task.title, "Task")
     }
 

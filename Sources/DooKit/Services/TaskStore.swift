@@ -88,6 +88,8 @@ public class TaskStore {
     // MARK: - File I/O
 
     private func loadAll() {
+        TaskFileIO.migrateUntriagedIfNeeded(at: todoFileURL)
+        TaskFileIO.migrateUntriagedIfNeeded(at: doneFileURL)
         activeTasks = TaskFileIO.loadTasks(from: todoFileURL)
         completedTasks = TaskFileIO.loadTasks(from: doneFileURL)
     }

@@ -11,7 +11,7 @@ struct TaskMoveCommand: ParsableCommand {
     @Argument(help: "Task ID (row number or UUID prefix)")
     var id: String
 
-    @Argument(help: "Target status (untriaged, backlog, inprogress, inreview)")
+    @Argument(help: "Target status (triage, backlog, inprogress, inreview)")
     var status: String
 
     func run() throws {

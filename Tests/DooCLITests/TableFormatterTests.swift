@@ -80,12 +80,12 @@ final class TableFormatterTests: XCTestCase {
 
     func testGroupedListShowsSections() {
         let tasks = [
-            DooTask(title: "Triage task", status: .untriaged),
+            DooTask(title: "Triage task", status: .triage),
             DooTask(title: "Backlog task", status: .backlog),
             DooTask(title: "Progress task", status: .inProgress),
         ]
         let output = TableFormatter.formatGroupedTaskList(tasks)
-        XCTAssertTrue(output.contains("Untriaged (1)"))
+        XCTAssertTrue(output.contains("Triage (1)"))
         XCTAssertTrue(output.contains("Backlog (1)"))
         XCTAssertTrue(output.contains("In Progress (1)"))
         XCTAssertTrue(output.contains("In Review (0)"))
@@ -100,7 +100,7 @@ final class TableFormatterTests: XCTestCase {
 
     func testGroupedListGlobalRowNumbering() {
         let tasks = [
-            DooTask(title: "First", status: .untriaged),
+            DooTask(title: "First", status: .triage),
             DooTask(title: "Second", status: .backlog),
             DooTask(title: "Third", status: .inProgress),
         ]

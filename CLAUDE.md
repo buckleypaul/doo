@@ -49,7 +49,7 @@ Sources/
   DooCore/                 # Pure Foundation library (shared between GUI + CLI)
     Models/
       DooTask.swift         # Codable task struct (custom date coding)
-      PipelineStatus.swift  # PipelineStatus enum: untriaged, backlog, inProgress, inReview
+      PipelineStatus.swift  # PipelineStatus enum: triage, backlog, inProgress, inReview
       Subtask.swift
     Services/
       InlineSyntaxParser.swift  # parses "title !N #tag @date %status /description" → DooTask
@@ -120,7 +120,7 @@ doo task complete <ID>                     # mark complete
 doo task uncomplete <ID>                   # restore to active
 
 doo task move <ID> backlog                 # move to pipeline status
-doo task move <ID> inprogress              # accepts: untriaged, backlog, inprogress, inreview
+doo task move <ID> inprogress              # accepts: triage, backlog, inprogress, inreview
 
 doo task edit <ID> --priority 2 --tag new --remove-tag old --due none
 doo task edit <ID> --status inreview       # change status via edit
@@ -156,7 +156,7 @@ Both data paths are configurable in Settings. All paths are persisted in `~/.con
       "dueDate": "2026-03-10",
       "dateAdded": "2026-03-01T10:00:00Z",
       "dateCompleted": null,
-      "status": "untriaged",
+      "status": "triage",
       "description": "optional",
       "notes": "optional freeform",
       "subtasks": []
@@ -168,7 +168,7 @@ Both data paths are configurable in Settings. All paths are persisted in `~/.con
 - `dueDate` — date-only string `yyyy-MM-dd` (not ISO 8601)
 - `dateAdded` / `dateCompleted` — ISO 8601 with seconds
 - `priority` — integer 0 (highest) to 2 (lowest), default 2
-- `status` — pipeline status string: `"untriaged"`, `"backlog"`, `"in_progress"`, `"in_review"` (default `"untriaged"`, missing field decodes as untriaged)
+- `status` — pipeline status string: `"triage"`, `"backlog"`, `"in_progress"`, `"in_review"` (default `"triage"`, missing field decodes as triage; legacy `"untriaged"` values are auto-migrated)
 - `subtasks` — array of `{id, title, completed}`
 
 The GUI **live-reloads** within ~100 ms when JSON files change externally (including CLI edits).
@@ -181,7 +181,7 @@ title text [!0-2] [#tag …] [@today|tomorrow|yyyy-MM-dd] [%status] [/descriptio
 
 Example: `Fix login bug !1 #backend @tomorrow %backlog /check token expiry`
 
-Status shortcuts: `%untriaged`, `%backlog`, `%inprogress` (or `%in-progress`, `%in_progress`), `%inreview` (or `%in-review`, `%in_review`)
+Status shortcuts: `%triage`, `%backlog`, `%inprogress` (or `%in-progress`, `%in_progress`), `%inreview` (or `%in-review`, `%in_review`)
 
 ## Key patterns
 
@@ -194,7 +194,7 @@ Status shortcuts: `%untriaged`, `%backlog`, `%inprogress` (or `%in-progress`, `%
 - `CLITaskStore` is a lightweight alternative to `TaskStore` — no file watchers, no `@Observable`, reads settings via `SettingsReader`
 - `DooTask.dueDateSortKey` / `dateCompletedSortKey` — non-optional `Date` proxies used by `Table` sort (`KeyPathComparator` requires `Comparable`; `Date?` is not)
 - GUI sort uses `[KeyPathComparator<DooTask>]` bound to `Table.sortOrder`; `FilterState.sortOption` is CLI-only — the GUI bypasses it
-- `PipelineStatus` enum defines 4 workflow stages (untriaged → backlog → in_progress → in_review); Done remains implicit via done.json
+- `PipelineStatus` enum defines 4 workflow stages (triage → backlog → in_progress → in_review); Done remains implicit via done.json
 - `PipelineStatus.fromShorthand()` normalizes various input formats (hyphens, underscores, camelCase) to enum cases
 - TodoListView supports grouped (DisclosureGroup per status) and flat (Table) views, toggled via `settings.groupByStatus`
 - CLI `task list` shows grouped output by default; `--status` filter or `--done` uses flat output

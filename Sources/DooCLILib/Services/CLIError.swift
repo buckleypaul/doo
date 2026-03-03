@@ -18,7 +18,7 @@ public enum CLIError: LocalizedError, Equatable {
         case .invalidPriority(let p):
             return "Priority must be 0, 1, or 2 (got \(p))"
         case .invalidStatus(let s):
-            return "Invalid status '\(s)'. Valid: untriaged, backlog, inprogress, inreview"
+            return "Invalid status '\(s)'. Valid: triage, backlog, inprogress, inreview"
         }
     }
 }

@@ -35,7 +35,7 @@ struct TaskListCommand: ParsableCommand {
     @Option(name: .long, help: "Sort order: priority, newest, oldest, due, alpha, completed")
     var sort: String?
 
-    @Option(name: .long, help: "Filter by status (repeatable: untriaged, backlog, inprogress, inreview)")
+    @Option(name: .long, help: "Filter by status (repeatable: triage, backlog, inprogress, inreview)")
     var status: [String] = []
 
     func run() throws {

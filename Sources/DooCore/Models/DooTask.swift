@@ -21,7 +21,7 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
         dueDate: Date? = nil,
         dateAdded: Date = Date(),
         dateCompleted: Date? = nil,
-        status: PipelineStatus = .untriaged
+        status: PipelineStatus = .triage
     ) {
         self.id = id
         self.title = title
@@ -62,7 +62,9 @@ extension DooTask {
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
         dateAdded = try container.decode(Date.self, forKey: .dateAdded)
         dateCompleted = try container.decodeIfPresent(Date.self, forKey: .dateCompleted)
-        status = (try? container.decodeIfPresent(PipelineStatus.self, forKey: .status)) ?? .untriaged
+        // Decode status with backward compat for legacy "untriaged" raw value
+        let rawStatus = (try? container.decodeIfPresent(String.self, forKey: .status)) ?? "triage"
+        status = (rawStatus == "untriaged" ? .triage : PipelineStatus(rawValue: rawStatus)) ?? .triage
 
         // dueDate is date-only string "yyyy-MM-dd"
         if let dueDateString = try container.decodeIfPresent(String.self, forKey: .dueDate) {

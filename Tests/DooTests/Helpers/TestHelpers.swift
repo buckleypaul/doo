@@ -24,7 +24,7 @@ func sampleTask(
     dueDate: Date? = nil,
     dateAdded: Date = Date(),
     dateCompleted: Date? = nil,
-    status: PipelineStatus = .untriaged
+    status: PipelineStatus = .triage
 ) -> DooTask {
     DooTask(
         id: id,

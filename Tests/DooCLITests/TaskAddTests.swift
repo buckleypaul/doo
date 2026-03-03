@@ -146,9 +146,9 @@ final class TaskAddTests: XCTestCase {
         XCTAssertEqual(tasks[1].title, "First")
     }
 
-    func testDefaultStatusIsUntriaged() throws {
+    func testDefaultStatusIsTriage() throws {
         try addTask(input: "Task")
-        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .untriaged)
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .triage)
     }
 
     func testInlineStatusToken() throws {

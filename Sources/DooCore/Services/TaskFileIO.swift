@@ -17,6 +17,16 @@ public enum TaskFileIO {
         }
     }
 
+    /// Migrates legacy `"untriaged"` status values to `"triage"` in-place.
+    /// No-ops if the file doesn't exist or contains no legacy values.
+    public static func migrateUntriagedIfNeeded(at url: URL) {
+        guard let data = try? Data(contentsOf: url),
+              let text = String(data: data, encoding: .utf8),
+              text.contains("\"untriaged\"") else { return }
+        let tasks = loadTasks(from: url)
+        try? saveTasks(tasks, to: url)
+    }
+
     public static func saveTasks(_ tasks: [DooTask], to url: URL) throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

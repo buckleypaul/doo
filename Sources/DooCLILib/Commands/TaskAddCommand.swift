@@ -23,7 +23,7 @@ struct TaskAddCommand: ParsableCommand {
     @Option(name: .long, help: "Description text")
     var description: String?
 
-    @Option(name: .long, help: "Pipeline status (untriaged, backlog, inprogress, inreview)")
+    @Option(name: .long, help: "Pipeline status (triage, backlog, inprogress, inreview)")
     var status: String?
 
     func run() throws {

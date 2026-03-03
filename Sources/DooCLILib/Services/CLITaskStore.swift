@@ -9,11 +9,15 @@ public struct CLITaskStore {
         let config = SettingsReader.load(from: configURL)
         self.todoURL = URL(fileURLWithPath: config.todoFilePath)
         self.doneURL = URL(fileURLWithPath: config.doneFilePath)
+        TaskFileIO.migrateUntriagedIfNeeded(at: todoURL)
+        TaskFileIO.migrateUntriagedIfNeeded(at: doneURL)
     }
 
     public init(todoPath: String, donePath: String) {
         self.todoURL = URL(fileURLWithPath: todoPath)
         self.doneURL = URL(fileURLWithPath: donePath)
+        TaskFileIO.migrateUntriagedIfNeeded(at: todoURL)
+        TaskFileIO.migrateUntriagedIfNeeded(at: doneURL)
     }
 
     // MARK: - Read
