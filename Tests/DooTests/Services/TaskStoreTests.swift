@@ -138,6 +138,17 @@ final class TaskStoreTests: XCTestCase {
         XCTAssertTrue(s.activeTasks.isEmpty)
     }
 
+    func testDeleteTaskFromCompleted() {
+        let s = makeStore()
+        let task = sampleTask(title: "Complete then delete")
+        s.addTask(task)
+        s.completeTask(task)
+        XCTAssertEqual(s.completedTasks.count, 1)
+        let completed = s.completedTasks[0]
+        s.deleteTask(completed)
+        XCTAssertTrue(s.completedTasks.isEmpty)
+    }
+
     func testUpdatePathsReloadsFromNewFiles() throws {
         let s = makeStore()
         s.addTask(sampleTask(title: "Old"))

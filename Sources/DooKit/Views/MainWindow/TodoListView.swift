@@ -4,7 +4,6 @@ import SwiftUI
 struct TodoListView: View {
     @Bindable var store: TaskStore
     @State private var filterState = FilterState()
-    @State private var taskToDelete: DooTask?
     @State private var newTaskInput = ""
     @FocusState private var isInputFocused: Bool
     @State private var selectedTaskID: DooTask.ID?
@@ -12,6 +11,7 @@ struct TodoListView: View {
     @State private var showDetail = true
     @State private var savedDetailWidth: CGFloat = 320
     @State private var dragStartWidth: CGFloat? = nil
+    @State private var hoveredTaskID: DooTask.ID?
 
     private var displayedTasks: [DooTask] {
         filterState.apply(to: store.activeTasks).sorted(using: sortOrder)
@@ -68,22 +68,6 @@ struct TodoListView: View {
                 selectedTaskID = nil
             }
         }
-        .alert("Delete Task?", isPresented: Binding(
-            get: { taskToDelete != nil },
-            set: { if !$0 { taskToDelete = nil } }
-        )) {
-            Button("Cancel", role: .cancel) { taskToDelete = nil }
-            Button("Delete", role: .destructive) {
-                if let task = taskToDelete {
-                    withAnimation { store.deleteTask(task) }
-                    taskToDelete = nil
-                }
-            }
-        } message: {
-            if let task = taskToDelete {
-                Text("Are you sure you want to delete \"\(task.title)\"?")
-            }
-        }
     }
 
     @ViewBuilder
@@ -117,6 +101,9 @@ struct TodoListView: View {
             ), sortOrder: $sortOrder) {
                 TableColumn("Title", value: \.title) { task in
                     Text(task.title)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                        .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
                 }
                 TableColumn("Priority", value: \.priority) { task in
                     let color = DooStyle.priorityColor(for: task.priority)
@@ -126,6 +113,9 @@ struct TodoListView: View {
                         .background(color.opacity(0.2))
                         .foregroundStyle(color)
                         .clipShape(RoundedRectangle(cornerRadius: DooStyle.Radius.badge))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
                 }
                 .width(70)
                 TableColumn("Tags") { task in
@@ -139,25 +129,46 @@ struct TodoListView: View {
                                 .clipShape(Capsule())
                         }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
                 }
                 TableColumn("Due", value: \.dueDateSortKey) { task in
-                    if let due = task.dueDate {
-                        Text(DateFormatting.dateOnly(due))
-                            .font(.caption)
-                            .foregroundStyle(DateFormatting.isOverdue(due) ? .red : .secondary)
-                    } else {
-                        Text("—")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
+                    Group {
+                        if let due = task.dueDate {
+                            Text(DateFormatting.dateOnly(due))
+                                .font(.caption)
+                                .foregroundStyle(DateFormatting.isOverdue(due) ? .red : .secondary)
+                        } else {
+                            Text("—")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
                 }
                 .width(100)
                 TableColumn("Added", value: \.dateAdded) { task in
                     Text(DateFormatting.relative(task.dateAdded))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                        .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
                 }
                 .width(90)
+                TableColumn("") { task in
+                    DeleteButtonCell(
+                        isHovered: hoveredTaskID == task.id,
+                        onDelete: { withAnimation { store.deleteTask(task) } }
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
+                }
+                .width(min: 24, ideal: 64, max: 64)
             }
             .contextMenu(forSelectionType: DooTask.ID.self) { ids in
                 if let id = ids.first,
@@ -167,7 +178,7 @@ struct TodoListView: View {
                     }
                     Divider()
                     Button("Delete", role: .destructive) {
-                        taskToDelete = task
+                        withAnimation { store.deleteTask(task) }
                     }
                 }
             }
