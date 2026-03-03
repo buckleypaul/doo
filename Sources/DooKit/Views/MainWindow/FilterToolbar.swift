@@ -44,7 +44,7 @@ struct FilterToolbar: View {
 
             // Priority pills
             HStack(spacing: 2) {
-                ForEach(1...5, id: \.self) { p in
+                ForEach([1, 2, 3, 4, 5], id: \.self) { p in
                     FilterPill("P\(p)", isActive: filterState.selectedPriorities.contains(p)) {
                         if filterState.selectedPriorities.contains(p) {
                             filterState.selectedPriorities.remove(p)
@@ -69,6 +69,9 @@ struct FilterToolbar: View {
                         selectedTags: $filterState.selectedTags,
                         search: $tagSearch
                     )
+                }
+                .onChange(of: showTagsPopover) { _, isPresented in
+                    if !isPresented { tagSearch = "" }
                 }
             }
 
