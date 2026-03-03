@@ -7,15 +7,6 @@ import SwiftUI
 public class SettingsManager {
     public static let shared = SettingsManager()
 
-    // MARK: - Codable config
-
-    private struct SettingsConfig: Codable {
-        var todoFilePath: String
-        var doneFilePath: String
-        var hotkeyEnabled: Bool
-        var launchAtLogin: Bool
-    }
-
     // MARK: - Public properties
 
     public var todoFilePath: String {
@@ -54,22 +45,11 @@ public class SettingsManager {
     // Package-internal init for testing — accepts any config file URL.
     init(configURL: URL) {
         self.configURL = configURL
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let defaultTodo = "\(home)/.local/share/doo/todo.json"
-        let defaultDone = "\(home)/.local/share/doo/done.json"
-
-        if let data = try? Data(contentsOf: configURL),
-           let config = try? JSONDecoder().decode(SettingsConfig.self, from: data) {
-            self.todoFilePath = config.todoFilePath
-            self.doneFilePath = config.doneFilePath
-            self.hotkeyEnabled = config.hotkeyEnabled
-            self.launchAtLogin = config.launchAtLogin
-        } else {
-            self.todoFilePath = defaultTodo
-            self.doneFilePath = defaultDone
-            self.hotkeyEnabled = true
-            self.launchAtLogin = false
-        }
+        let config = SettingsReader.load(from: configURL)
+        self.todoFilePath = config.todoFilePath
+        self.doneFilePath = config.doneFilePath
+        self.hotkeyEnabled = config.hotkeyEnabled
+        self.launchAtLogin = config.launchAtLogin
     }
 
     // MARK: - Persistence

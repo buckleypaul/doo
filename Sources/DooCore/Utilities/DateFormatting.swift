@@ -1,6 +1,5 @@
 import Foundation
 
-@MainActor
 public enum DateFormatting {
     private static let dateOnlyFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -9,7 +8,7 @@ public enum DateFormatting {
         return f
     }()
 
-    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
+    nonisolated(unsafe) private static let relativeDateFormatter: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
         f.unitsStyle = .abbreviated
         return f
@@ -27,7 +26,7 @@ public enum DateFormatting {
         date.formatted(date: .abbreviated, time: .shortened)
     }
 
-    nonisolated public static func isOverdue(_ date: Date) -> Bool {
+    public static func isOverdue(_ date: Date) -> Bool {
         Calendar.current.startOfDay(for: date) < Calendar.current.startOfDay(for: Date())
     }
 }

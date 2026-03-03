@@ -88,24 +88,8 @@ public class TaskStore {
     // MARK: - File I/O
 
     private func loadAll() {
-        activeTasks = loadTasks(from: todoFileURL)
-        completedTasks = loadTasks(from: doneFileURL)
-    }
-
-    private func loadTasks(from url: URL) -> [DooTask] {
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            return []
-        }
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let taskFile = try decoder.decode(TaskFile.self, from: data)
-            return taskFile.tasks
-        } catch {
-            print("Failed to load \(url.lastPathComponent): \(error)")
-            return []
-        }
+        activeTasks = TaskFileIO.loadTasks(from: todoFileURL)
+        completedTasks = TaskFileIO.loadTasks(from: doneFileURL)
     }
 
     private func saveTodoFile() {
@@ -124,19 +108,8 @@ public class TaskStore {
             }
         }
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-
         do {
-            let taskFile = TaskFile(tasks: tasks)
-            let data = try encoder.encode(taskFile)
-
-            // Atomic write: write to temp file then rename
-            let tempURL = url.deletingLastPathComponent()
-                .appendingPathComponent(".\(url.lastPathComponent).tmp")
-            try data.write(to: tempURL)
-            _ = try FileManager.default.replaceItemAt(url, withItemAt: tempURL)
+            try TaskFileIO.saveTasks(tasks, to: url)
         } catch {
             print("Failed to save \(url.lastPathComponent): \(error)")
         }
@@ -146,10 +119,10 @@ public class TaskStore {
 
     private func startWatching() {
         watchFile(at: todoFileURL) { [weak self] in
-            self?.activeTasks = self?.loadTasks(from: self!.todoFileURL) ?? []
+            self?.activeTasks = TaskFileIO.loadTasks(from: self!.todoFileURL)
         }
         watchFile(at: doneFileURL) { [weak self] in
-            self?.completedTasks = self?.loadTasks(from: self!.doneFileURL) ?? []
+            self?.completedTasks = TaskFileIO.loadTasks(from: self!.doneFileURL)
         }
     }
 
