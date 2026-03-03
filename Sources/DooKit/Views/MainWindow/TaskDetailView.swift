@@ -38,7 +38,7 @@ struct TaskDetailView: View {
                         Text(status.displayName).tag(status)
                     }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
             }
 
             Section("Due Date") {

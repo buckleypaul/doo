@@ -13,6 +13,7 @@ struct TodoListView: View {
     @State private var savedDetailWidth: CGFloat = 320
     @State private var dragStartWidth: CGFloat? = nil
     @State private var expandedSections: Set<PipelineStatus> = Set(PipelineStatus.allCases)
+    @State private var hoveredTaskID: DooTask.ID?
 
     private var displayedTasks: [DooTask] {
         filterState.apply(to: store.activeTasks).sorted(using: sortOrder)
@@ -114,45 +115,74 @@ struct TodoListView: View {
     private var groupedView: some View {
         let tasks = displayedTasks
         let grouped = Dictionary(grouping: tasks, by: \.status)
-        List(selection: Binding(
-            get: { selectedTaskID },
-            set: { if let id = $0 { selectedTaskID = id } }
-        )) {
-            ForEach(PipelineStatus.allCases) { status in
-                let sectionTasks = grouped[status, default: []]
-                DisclosureGroup(
-                    isExpanded: Binding(
-                        get: { expandedSections.contains(status) },
-                        set: { isExpanded in
-                            if isExpanded {
-                                expandedSections.insert(status)
-                            } else {
-                                expandedSections.remove(status)
-                            }
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(PipelineStatus.allCases) { status in
+                    let sectionTasks = grouped[status, default: []]
+                    sectionHeader(status, count: sectionTasks.count)
+                    if expandedSections.contains(status) {
+                        ForEach(sectionTasks) { task in
+                            groupedTaskRow(task)
                         }
-                    )
-                ) {
-                    ForEach(sectionTasks) { task in
-                        taskRow(task)
-                            .tag(task.id)
-                            .contextMenu { taskContextMenu(task) }
                     }
-                } label: {
-                    HStack {
-                        Text(status.displayName)
-                            .font(.headline)
-                        Text("\(sectionTasks.count)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, DooStyle.Spacing.sm - 2)
-                            .padding(.vertical, DooStyle.Spacing.xs)
-                            .background(.quaternary)
-                            .clipShape(Capsule())
+                    Spacer().frame(height: 16)
+                }
+            }
+            .padding(.horizontal, DooStyle.Spacing.md)
+            .padding(.vertical, DooStyle.Spacing.sm)
+        }
+    }
+
+    private func sectionHeader(_ status: PipelineStatus, count: Int) -> some View {
+        let expanded = expandedSections.contains(status)
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: DooStyle.Spacing.sm) {
+                Text(status.displayName.uppercased())
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                Text("\(count)")
+                    .font(.caption2)
+                    .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                    .padding(.vertical, 2)
+                    .background(.quaternary)
+                    .clipShape(Capsule())
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(expanded ? .degrees(90) : .zero)
+                    .animation(.easeInOut(duration: 0.15), value: expanded)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    if expanded {
+                        expandedSections.remove(status)
+                    } else {
+                        expandedSections.insert(status)
                     }
                 }
             }
+            .padding(.vertical, DooStyle.Spacing.xs)
+            Divider()
         }
-        .listStyle(.sidebar)
+    }
+
+    private func groupedTaskRow(_ task: DooTask) -> some View {
+        let isSelected = selectedTaskID == task.id
+        let isHovered = hoveredTaskID == task.id
+        return taskRow(task)
+            .padding(.horizontal, DooStyle.Spacing.sm)
+            .padding(.vertical, DooStyle.Spacing.xs)
+            .background(
+                RoundedRectangle(cornerRadius: DooStyle.Radius.card)
+                    .fill(isSelected ? Color.accentColor.opacity(0.08) : isHovered ? Color.primary.opacity(0.04) : .clear)
+            )
+            .contentShape(Rectangle())
+            .onTapGesture { selectedTaskID = task.id }
+            .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
+            .contextMenu { taskContextMenu(task) }
     }
 
     private func taskRow(_ task: DooTask) -> some View {
