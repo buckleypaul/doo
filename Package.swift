@@ -35,7 +35,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "DooCLI",
-            dependencies: ["DooCLILib"],
+            dependencies: ["DooCore", "DooCLILib"],
             path: "Sources/DooCLI"
         ),
         .testTarget(
