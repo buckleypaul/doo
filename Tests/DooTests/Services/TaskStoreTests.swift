@@ -5,7 +5,7 @@ import XCTest
 @MainActor
 final class TaskStoreTests: XCTestCase {
 
-    private var tempDir: URL!
+    nonisolated(unsafe) private var tempDir: URL!
     private var store: TaskStore!
 
     override func setUp() {

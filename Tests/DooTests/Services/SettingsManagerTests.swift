@@ -5,8 +5,8 @@ import XCTest
 @MainActor
 final class SettingsManagerTests: XCTestCase {
 
-    private var tempDir: URL!
-    private var configURL: URL!
+    nonisolated(unsafe) private var tempDir: URL!
+    nonisolated(unsafe) private var configURL: URL!
 
     override func setUp() {
         super.setUp()
