@@ -37,6 +37,7 @@ public struct ContentView: View {
                     Image(systemName: item.icon)
                 }
                 .badge(badgeCount(for: item))
+                .tag(item)
             }
             .navigationSplitViewColumnWidth(min: 140, ideal: 160)
         } detail: {
