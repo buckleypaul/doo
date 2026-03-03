@@ -5,8 +5,11 @@ struct FilterToolbar: View {
     let availableTags: [String]
     let showDateCompleted: Bool
 
+    @State private var showTagsPopover = false
+    @State private var tagSearch = ""
+
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             // Search
             HStack {
                 Image(systemName: "magnifyingglass")
@@ -39,53 +42,39 @@ struct FilterToolbar: View {
             .pickerStyle(.menu)
             .frame(width: 140)
 
-            // Filter popover
-            Menu {
-                // Priority selection
-                Menu("Priority") {
-                    ForEach(1...5, id: \.self) { p in
-                        Toggle("P\(p)", isOn: Binding(
-                            get: { filterState.selectedPriorities.contains(p) },
-                            set: { enabled in
-                                if enabled {
-                                    filterState.selectedPriorities.insert(p)
-                                } else {
-                                    filterState.selectedPriorities.remove(p)
-                                }
-                            }
-                        ))
-                    }
-                }
-
-                // Tags
-                if !availableTags.isEmpty {
-                    Menu("Tags") {
-                        ForEach(availableTags, id: \.self) { tag in
-                            Toggle(tag, isOn: Binding(
-                                get: { filterState.selectedTags.contains(tag) },
-                                set: { selected in
-                                    if selected {
-                                        filterState.selectedTags.insert(tag)
-                                    } else {
-                                        filterState.selectedTags.remove(tag)
-                                    }
-                                }
-                            ))
+            // Priority pills
+            HStack(spacing: 2) {
+                ForEach(1...5, id: \.self) { p in
+                    FilterPill("P\(p)", isActive: filterState.selectedPriorities.contains(p)) {
+                        if filterState.selectedPriorities.contains(p) {
+                            filterState.selectedPriorities.remove(p)
+                        } else {
+                            filterState.selectedPriorities.insert(p)
                         }
                     }
                 }
+            }
 
-                Divider()
-
-                Toggle("Overdue Only", isOn: $filterState.overdueOnly)
-
-                Divider()
-
-                Button("Reset Filters") {
-                    filterState = FilterState()
+            // Tags pill
+            if !availableTags.isEmpty {
+                let label = filterState.selectedTags.isEmpty
+                    ? "Tags"
+                    : "Tags (\(filterState.selectedTags.count))"
+                FilterPill(label, isActive: !filterState.selectedTags.isEmpty) {
+                    showTagsPopover.toggle()
                 }
-            } label: {
-                Label("Filter", systemImage: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                .popover(isPresented: $showTagsPopover) {
+                    TagsPopover(
+                        availableTags: availableTags,
+                        selectedTags: $filterState.selectedTags,
+                        search: $tagSearch
+                    )
+                }
+            }
+
+            // Overdue pill
+            FilterPill("Overdue", isActive: filterState.overdueOnly) {
+                filterState.overdueOnly.toggle()
             }
         }
         .padding(.horizontal)
@@ -93,16 +82,71 @@ struct FilterToolbar: View {
     }
 
     private var sortOptions: [SortOption] {
-        if showDateCompleted {
-            return SortOption.allCases
-        } else {
-            return SortOption.allCases.filter { $0 != .dateCompleted }
+        showDateCompleted ? SortOption.allCases : SortOption.allCases.filter { $0 != .dateCompleted }
+    }
+}
+
+// MARK: - FilterPill
+
+private struct FilterPill: View {
+    let label: String
+    let isActive: Bool
+    let action: () -> Void
+
+    init(_ label: String, isActive: Bool, action: @escaping () -> Void) {
+        self.label = label
+        self.isActive = isActive
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.callout)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(isActive ? Color.accentColor : Color.primary.opacity(0.1))
+                .foregroundStyle(isActive ? Color.white : Color.primary)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - TagsPopover
+
+private struct TagsPopover: View {
+    let availableTags: [String]
+    @Binding var selectedTags: Set<String>
+    @Binding var search: String
+
+    private var filteredTags: [String] {
+        search.isEmpty ? availableTags : availableTags.filter {
+            $0.localizedCaseInsensitiveContains(search)
         }
     }
 
-    private var hasActiveFilters: Bool {
-        !filterState.selectedTags.isEmpty
-        || !filterState.selectedPriorities.isEmpty
-        || filterState.overdueOnly
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if availableTags.count > 12 {
+                TextField("Search tags...", text: $search)
+                    .textFieldStyle(.roundedBorder)
+            }
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 6) {
+                    ForEach(filteredTags, id: \.self) { tag in
+                        FilterPill(tag, isActive: selectedTags.contains(tag)) {
+                            if selectedTags.contains(tag) {
+                                selectedTags.remove(tag)
+                            } else {
+                                selectedTags.insert(tag)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .frame(minWidth: 200, maxWidth: 300, maxHeight: 300)
     }
 }
