@@ -102,6 +102,10 @@ private struct InlineAddRow: View {
     var isFocused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
 
+    private var isInputEmpty: Bool {
+        input.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             TextField("Add a task... (!priority #tag @date /desc)", text: $input)
@@ -112,10 +116,10 @@ private struct InlineAddRow: View {
             Button(action: onSubmit) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 18))
-                    .foregroundStyle(input.trimmingCharacters(in: .whitespaces).isEmpty ? Color.secondary : Color.accentColor)
+                    .foregroundStyle(isInputEmpty ? Color.secondary : Color.accentColor)
             }
             .buttonStyle(.plain)
-            .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)
+            .disabled(isInputEmpty)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
