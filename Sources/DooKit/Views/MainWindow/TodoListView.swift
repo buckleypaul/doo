@@ -107,21 +107,41 @@ private struct InlineAddRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 8) {
-            TextField("Add a task... (!priority #tag @date /desc)", text: $input)
-                .textFieldStyle(.plain)
-                .focused(isFocused)
-                .onSubmit { onSubmit() }
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                TextField("Add a task...", text: $input)
+                    .textFieldStyle(.plain)
+                    .focused(isFocused)
+                    .onSubmit { onSubmit() }
 
-            Button(action: onSubmit) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 18))
-                    .foregroundStyle(isInputEmpty ? Color.secondary : Color.accentColor)
+                Button(action: onSubmit) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(isInputEmpty ? Color.secondary : Color.accentColor)
+                }
+                .buttonStyle(.plain)
+                .disabled(isInputEmpty)
             }
-            .buttonStyle(.plain)
-            .disabled(isInputEmpty)
+
+            HStack(spacing: 16) {
+                hintItem("!1-5", label: "priority")
+                hintItem("#tag", label: "tag")
+                hintItem("@today", label: "or @tomorrow")
+                hintItem("/text", label: "description")
+            }
+            .font(.caption)
+            .foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
+    }
+
+    private func hintItem(_ code: String, label: String) -> some View {
+        HStack(spacing: 2) {
+            Text(code)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+            Text(label)
+        }
     }
 }
