@@ -15,6 +15,9 @@ struct SectionedTaskListView: View {
     @State private var statusPopoverTaskID: DooTask.ID?
     @State private var dueDatePopoverTaskID: DooTask.ID?
     @State private var hoveredTaskID: DooTask.ID?
+    @State private var editingTitleTaskID: DooTask.ID?
+    @State private var editingTitleText: String = ""
+    @FocusState private var focusedTitleTaskID: DooTask.ID?
 
     // Shared resizable column widths (persisted across sections)
     @State private var statusWidth: CGFloat = 90
@@ -46,6 +49,11 @@ struct SectionedTaskListView: View {
                 sectionContent
             }
             .frame(minWidth: 300, maxWidth: .infinity)
+            .onChange(of: focusedTitleTaskID) { oldValue, newValue in
+                if let taskID = oldValue, newValue == nil {
+                    saveTitleEdit(taskID: taskID)
+                }
+            }
 
             if showDetail {
                 DooStyle.separator
@@ -285,10 +293,28 @@ struct SectionedTaskListView: View {
             }
             .frame(width: checkWidth, alignment: .center)
 
-            // Title (flexible)
-            Text(task.title)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Title (flexible) — click to edit inline
+            if editingTitleTaskID == task.id {
+                TextField("Title", text: $editingTitleText, axis: .vertical)
+                    .lineLimit(1...8)
+                    .textFieldStyle(.plain)
+                    .focused($focusedTitleTaskID, equals: task.id)
+                    .onSubmit { saveTitleEdit(taskID: task.id) }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Text(task.title)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .onTapGesture {
+                        if let prev = editingTitleTaskID, prev != task.id {
+                            saveTitleEdit(taskID: prev)
+                        }
+                        selectedTaskID = task.id
+                        editingTitleTaskID = task.id
+                        editingTitleText = task.title
+                        focusedTitleTaskID = task.id
+                    }
+            }
 
             // Status
             Button {
@@ -430,6 +456,21 @@ struct SectionedTaskListView: View {
         withAnimation { store.addTask(task) }
         newTaskInput = ""
         isInputFocused = true
+    }
+
+    private func saveTitleEdit(taskID: UUID) {
+        let text = editingTitleText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty,
+              let index = store.activeTasks.firstIndex(where: { $0.id == taskID }) else {
+            editingTitleTaskID = nil
+            return
+        }
+        var updated = store.activeTasks[index]
+        if updated.title != text {
+            updated.title = text
+            store.updateTask(updated)
+        }
+        editingTitleTaskID = nil
     }
 }
 

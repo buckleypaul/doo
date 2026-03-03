@@ -8,7 +8,8 @@ struct TaskDetailView: View {
     var body: some View {
         Form {
             Section("Details") {
-                TextField("Title", text: $task.title)
+                TextField("Title", text: $task.title, axis: .vertical)
+                    .lineLimit(1...5)
 
                 TextField("Description", text: Binding(
                     get: { task.description ?? "" },

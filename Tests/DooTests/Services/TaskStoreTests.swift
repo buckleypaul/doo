@@ -149,6 +149,17 @@ final class TaskStoreTests: XCTestCase {
         XCTAssertTrue(s.completedTasks.isEmpty)
     }
 
+    func testUpdateTaskTitle() {
+        let s = makeStore()
+        s.addTask(sampleTask(title: "Original title"))
+        var task = s.activeTasks[0]
+        let newTitle = "Updated title from inline edit"
+        task.title = newTitle
+        s.updateTask(task)
+        let reloaded = s.activeTasks.first(where: { $0.id == task.id })
+        XCTAssertEqual(reloaded?.title, newTitle)
+    }
+
     func testUpdatePathsReloadsFromNewFiles() throws {
         let s = makeStore()
         s.addTask(sampleTask(title: "Old"))
