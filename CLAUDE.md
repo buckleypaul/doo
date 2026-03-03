@@ -7,7 +7,7 @@ macOS 15+ todo app. Swift 6 / SwiftUI. Local JSON storage.
 ```bash
 swift build -c release          # release build → .build/release/Doo
 swift run                        # dev run
-swift test                       # run all 55 tests
+swift test                       # run all 58 tests
 swift test --filter DooTests.InlineSyntaxParserTests  # single suite
 ```
 
@@ -38,7 +38,7 @@ Sources/
       Subtask.swift
     Services/
       TaskStore.swift      # @Observable — CRUD, atomic file writes, DispatchSource file watching
-      SettingsManager.swift  # @Observable — UserDefaults-backed, file paths + hotkey + launch-at-login
+      SettingsManager.swift  # @Observable — JSON-backed (~/.config/doo/settings.json), file paths + hotkey + launch-at-login
       InlineSyntaxParser.swift  # parses "title !N #tag @date /description" → DooTask
     Views/
       MainWindow/          # ContentView (sidebar Todo/Done), TodoListView, DoneListView, TaskRowView, TaskDetailView, FilterToolbar
@@ -49,7 +49,7 @@ Sources/
 Tests/
   DooTests/                # XCTest target — imports DooKit
     Models/                # DooTaskCodableTests, SubtaskCodableTests
-    Services/              # InlineSyntaxParserTests, TaskStoreTests, FilterStateTests
+    Services/              # InlineSyntaxParserTests, TaskStoreTests, FilterStateTests, SettingsManagerTests
     Utilities/             # DateFormattingTests
     Helpers/               # TestHelpers (shared factories + utilities)
 ```
@@ -60,10 +60,11 @@ The project uses a library + executable split so tests can `@testable import Doo
 
 | File | Default path | Content |
 |------|-------------|---------|
-| Todo | `~/doo-todo.json` | Active tasks |
-| Done | `~/doo-done.json` | Completed tasks |
+| Todo | `~/.local/share/doo/todo.json` | Active tasks |
+| Done | `~/.local/share/doo/done.json` | Completed tasks |
+| Settings | `~/.config/doo/settings.json` | App settings |
 
-Both paths are configurable in Settings and stored in UserDefaults.
+Both data paths are configurable in Settings. All paths are persisted in `~/.config/doo/settings.json`.
 
 ### JSON schema
 
