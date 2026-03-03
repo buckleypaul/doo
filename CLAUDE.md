@@ -56,12 +56,13 @@ Sources/
     Utilities/
       DateFormatting.swift
   DooKit/                  # GUI library target (SwiftUI views + @Observable services)
+    DooStyle.swift           # Shared design constants (priorityColor, Spacing, Radius, Size)
     DooKitExports.swift     # @_exported import DooCore
     Services/
       TaskStore.swift       # @Observable — CRUD, file watching, delegates I/O to TaskFileIO
       SettingsManager.swift # @Observable — JSON-backed settings, uses SettingsConfig
     Views/
-      MainWindow/           # ContentView, TodoListView, DoneListView, TaskRowView, TaskDetailView, FilterToolbar
+      MainWindow/           # ContentView, TodoListView, DoneListView, TaskDetailView, FilterToolbar
       QuickAdd/             # QuickAddPanel (NSPanel), QuickAddView
       Settings/             # SettingsView
   Doo/                     # GUI executable (2 files)
@@ -139,7 +140,7 @@ Both data paths are configurable in Settings. All paths are persisted in `~/.con
     {
       "id": "uuid",
       "title": "Buy milk",
-      "priority": 3,
+      "priority": 2,
       "tags": ["grocery"],
       "dueDate": "2026-03-10",
       "dateAdded": "2026-03-01T10:00:00Z",
@@ -176,3 +177,5 @@ Example: `Fix login bug !1 #backend @tomorrow /check token expiry`
 - `DooApp.onChange(of: settings.*FilePath)` calls `store.updatePaths` to swap file watchers live
 - `TaskStore.shutdown()` stops file watchers — call in test tearDown to avoid leaked DispatchSources
 - `CLITaskStore` is a lightweight alternative to `TaskStore` — no file watchers, no `@Observable`, reads settings via `SettingsReader`
+- `DooTask.dueDateSortKey` / `dateCompletedSortKey` — non-optional `Date` proxies used by `Table` sort (`KeyPathComparator` requires `Comparable`; `Date?` is not)
+- GUI sort uses `[KeyPathComparator<DooTask>]` bound to `Table.sortOrder`; `FilterState.sortOption` is CLI-only — the GUI bypasses it
