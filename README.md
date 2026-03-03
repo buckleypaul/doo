@@ -14,14 +14,15 @@ Doo stores your tasks as plain JSON files on disk — no cloud account, no sync 
 ## Installation
 
 ```bash
-git clone <repo-url>
-cd doo
-swift build -c release
+brew install buckleypaul/tap/doo
 ```
 
-Copy the binary to your Applications folder or run it in place:
+Or build from source:
 
 ```bash
+git clone https://github.com/buckleypaul/doo
+cd doo
+swift build -c release
 cp .build/release/Doo /Applications/Doo
 ```
 
