@@ -99,3 +99,11 @@ extension DooTask {
         }
     }
 }
+
+extension DooTask {
+    /// Sort key for dueDate — nil tasks sort after dated tasks
+    public var dueDateSortKey: Date { dueDate ?? .distantFuture }
+
+    /// Sort key for dateCompleted — nil tasks sort before completed tasks
+    public var dateCompletedSortKey: Date { dateCompleted ?? .distantPast }
+}

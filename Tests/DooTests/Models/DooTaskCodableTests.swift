@@ -164,4 +164,26 @@ final class DooTaskCodableTests: XCTestCase {
         XCTAssertEqual(decoded.tasks[1].title, "Second")
         XCTAssertEqual(decoded.tasks[1].priority, 1)
     }
+
+    func testDueDateSortKeyReturnsDueDateWhenSet() {
+        let due = dateOnly("2026-06-01")
+        let task = sampleTask(title: "T", dueDate: due)
+        XCTAssertEqual(task.dueDateSortKey, due)
+    }
+
+    func testDueDateSortKeyReturnsDistantFutureWhenNil() {
+        let task = sampleTask(title: "T", dueDate: nil)
+        XCTAssertEqual(task.dueDateSortKey, .distantFuture)
+    }
+
+    func testDateCompletedSortKeyReturnsDateCompletedWhenSet() {
+        let completed = iso8601("2026-03-01T10:00:00Z")
+        let task = sampleTask(title: "T", dateCompleted: completed)
+        XCTAssertEqual(task.dateCompletedSortKey, completed)
+    }
+
+    func testDateCompletedSortKeyReturnsDistantPastWhenNil() {
+        let task = sampleTask(title: "T", dateCompleted: nil)
+        XCTAssertEqual(task.dateCompletedSortKey, .distantPast)
+    }
 }
