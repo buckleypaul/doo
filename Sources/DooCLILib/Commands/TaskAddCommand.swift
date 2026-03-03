@@ -23,6 +23,9 @@ struct TaskAddCommand: ParsableCommand {
     @Option(name: .long, help: "Description text")
     var description: String?
 
+    @Option(name: .long, help: "Pipeline status (untriaged, backlog, inprogress, inreview)")
+    var status: String?
+
     func run() throws {
         // Parse inline syntax first
         var task = InlineSyntaxParser.parse(input)
@@ -41,6 +44,12 @@ struct TaskAddCommand: ParsableCommand {
         }
         if let desc = description {
             task.description = desc
+        }
+        if let s = status {
+            guard let parsed = PipelineStatus.fromShorthand(s) else {
+                throw CLIError.invalidStatus(s)
+            }
+            task.status = parsed
         }
 
         let store = CLITaskStore()

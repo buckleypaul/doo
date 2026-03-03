@@ -32,6 +32,15 @@ struct TaskDetailView: View {
                 .pickerStyle(.segmented)
             }
 
+            Section("Status") {
+                Picker("Status", selection: $task.status) {
+                    ForEach(PipelineStatus.allCases) { status in
+                        Text(status.displayName).tag(status)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
             Section("Due Date") {
                 Toggle("Has due date", isOn: Binding(
                     get: { task.dueDate != nil },

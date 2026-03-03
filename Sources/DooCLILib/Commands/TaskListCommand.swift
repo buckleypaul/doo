@@ -35,6 +35,9 @@ struct TaskListCommand: ParsableCommand {
     @Option(name: .long, help: "Sort order: priority, newest, oldest, due, alpha, completed")
     var sort: String?
 
+    @Option(name: .long, help: "Filter by status (repeatable: untriaged, backlog, inprogress, inreview)")
+    var status: [String] = []
+
     func run() throws {
         let store = CLITaskStore()
         let tasks = done ? store.loadCompletedTasks() : store.loadActiveTasks()
@@ -44,6 +47,8 @@ struct TaskListCommand: ParsableCommand {
 
         if json {
             print(try JSONOutput.encode(filtered))
+        } else if !done && status.isEmpty && filter.selectedStatuses.isEmpty {
+            print(TableFormatter.formatGroupedTaskList(filtered))
         } else {
             print(TableFormatter.formatTaskList(filtered))
         }
@@ -98,12 +103,21 @@ struct TaskListCommand: ParsableCommand {
             sortOption = .priority
         }
 
+        var selectedStatuses: Set<PipelineStatus> = []
+        for s in status {
+            guard let parsed = PipelineStatus.fromShorthand(s) else {
+                throw CLIError.invalidStatus(s)
+            }
+            selectedStatuses.insert(parsed)
+        }
+
         return FilterState(
             searchText: search ?? "",
             sortOption: sortOption,
             selectedTags: Set(tag),
             selectedPriorities: selectedPriorities,
-            overdueOnly: overdue
+            overdueOnly: overdue,
+            selectedStatuses: selectedStatuses
         )
     }
 }

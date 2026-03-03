@@ -101,6 +101,45 @@ final class InlineSyntaxParserTests: XCTestCase {
         XCTAssertEqual(task.description, "check token expiry")
     }
 
+    // MARK: - Status
+
+    func testParsesBacklogStatus() {
+        let task = InlineSyntaxParser.parse("Task %backlog")
+        XCTAssertEqual(task.status, .backlog)
+        XCTAssertEqual(task.title, "Task")
+    }
+
+    func testParsesInProgressStatus() {
+        let task = InlineSyntaxParser.parse("Task %inprogress")
+        XCTAssertEqual(task.status, .inProgress)
+    }
+
+    func testParsesInReviewStatus() {
+        let task = InlineSyntaxParser.parse("Task %inreview")
+        XCTAssertEqual(task.status, .inReview)
+    }
+
+    func testNoStatusTokenDefaultsToUntriaged() {
+        let task = InlineSyntaxParser.parse("Task without status")
+        XCTAssertEqual(task.status, .untriaged)
+    }
+
+    func testInvalidStatusTokenDefaultsToUntriaged() {
+        let task = InlineSyntaxParser.parse("Task %invalid")
+        XCTAssertEqual(task.status, .untriaged)
+        XCTAssertEqual(task.title, "Task")
+    }
+
+    func testStatusWithHyphenVariant() {
+        let task = InlineSyntaxParser.parse("Task %in-progress")
+        XCTAssertEqual(task.status, .inProgress)
+    }
+
+    func testStatusWithUnderscoreVariant() {
+        let task = InlineSyntaxParser.parse("Task %in_review")
+        XCTAssertEqual(task.status, .inReview)
+    }
+
     // MARK: - Combined
 
     func testParsesAllTokensTogether() {
@@ -110,5 +149,15 @@ final class InlineSyntaxParserTests: XCTestCase {
         XCTAssertEqual(task.tags, ["backend"])
         XCTAssertNotNil(task.dueDate)
         XCTAssertEqual(task.description, "check token expiry")
+    }
+
+    func testParsesAllTokensWithStatus() {
+        let task = InlineSyntaxParser.parse("Fix bug !1 %backlog #backend @tomorrow /desc")
+        XCTAssertEqual(task.title, "Fix bug")
+        XCTAssertEqual(task.priority, 1)
+        XCTAssertEqual(task.status, .backlog)
+        XCTAssertEqual(task.tags, ["backend"])
+        XCTAssertNotNil(task.dueDate)
+        XCTAssertEqual(task.description, "desc")
     }
 }

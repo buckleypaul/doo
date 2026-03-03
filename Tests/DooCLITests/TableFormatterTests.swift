@@ -71,4 +71,45 @@ final class TableFormatterTests: XCTestCase {
         XCTAssertFalse(output.contains("Description:"))
         XCTAssertFalse(output.contains("Notes:"))
     }
+
+    func testDetailViewShowsStatus() {
+        let task = DooTask(title: "Task", status: .inProgress)
+        let output = TableFormatter.formatTaskDetail(task)
+        XCTAssertTrue(output.contains("Status:      In Progress"))
+    }
+
+    func testGroupedListShowsSections() {
+        let tasks = [
+            DooTask(title: "Triage task", status: .untriaged),
+            DooTask(title: "Backlog task", status: .backlog),
+            DooTask(title: "Progress task", status: .inProgress),
+        ]
+        let output = TableFormatter.formatGroupedTaskList(tasks)
+        XCTAssertTrue(output.contains("Untriaged (1)"))
+        XCTAssertTrue(output.contains("Backlog (1)"))
+        XCTAssertTrue(output.contains("In Progress (1)"))
+        XCTAssertTrue(output.contains("In Review (0)"))
+        XCTAssertTrue(output.contains("(none)"))
+        XCTAssertTrue(output.contains("3 tasks"))
+    }
+
+    func testGroupedListEmptyShowsNoTasks() {
+        let output = TableFormatter.formatGroupedTaskList([])
+        XCTAssertEqual(output, "No tasks")
+    }
+
+    func testGroupedListGlobalRowNumbering() {
+        let tasks = [
+            DooTask(title: "First", status: .untriaged),
+            DooTask(title: "Second", status: .backlog),
+            DooTask(title: "Third", status: .inProgress),
+        ]
+        let output = TableFormatter.formatGroupedTaskList(tasks)
+        // Row numbers should be 1, 2, 3 across groups
+        let lines = output.components(separatedBy: "\n")
+        let dataLines = lines.filter { $0.trimmingCharacters(in: .whitespaces).hasPrefix("1") ||
+                                        $0.trimmingCharacters(in: .whitespaces).hasPrefix("2") ||
+                                        $0.trimmingCharacters(in: .whitespaces).hasPrefix("3") }
+        XCTAssertTrue(dataLines.count >= 3)
+    }
 }

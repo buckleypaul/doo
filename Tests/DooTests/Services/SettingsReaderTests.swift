@@ -25,6 +25,7 @@ final class SettingsReaderTests: XCTestCase {
         XCTAssertTrue(config.doneFilePath.hasSuffix("/.local/share/doo/done.json"))
         XCTAssertTrue(config.hotkeyEnabled)
         XCTAssertFalse(config.launchAtLogin)
+        XCTAssertTrue(config.groupByStatus)
     }
 
     func testLoadValidConfig() throws {

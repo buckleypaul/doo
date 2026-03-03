@@ -160,6 +160,52 @@ final class DooTaskCodableTests: XCTestCase {
         XCTAssertEqual(decoded.tasks[1].priority, 1)
     }
 
+    func testStatusRoundTrip() throws {
+        let task = sampleTask(title: "Test", status: .inProgress)
+        let decoded = try roundTrip(task)
+        XCTAssertEqual(decoded.status, .inProgress)
+    }
+
+    func testMissingStatusDecodesAsUntriaged() throws {
+        let json = """
+        {
+            "id": "550E8400-E29B-41D4-A716-446655440000",
+            "title": "Legacy task",
+            "dateAdded": "2026-03-01T10:00:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let task = try decoder.decode(DooTask.self, from: json)
+        XCTAssertEqual(task.status, .untriaged)
+    }
+
+    func testUnknownStatusStringDecodesAsUntriaged() throws {
+        let json = """
+        {
+            "id": "550E8400-E29B-41D4-A716-446655440000",
+            "title": "Bad status task",
+            "status": "nonexistent",
+            "dateAdded": "2026-03-01T10:00:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let task = try decoder.decode(DooTask.self, from: json)
+        XCTAssertEqual(task.status, .untriaged)
+    }
+
+    func testStatusEncodesAsRawString() throws {
+        let task = sampleTask(title: "Test", status: .inProgress)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(task)
+        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        XCTAssertEqual(json["status"] as? String, "in_progress")
+    }
+
     func testDueDateSortKeyReturnsDueDateWhenSet() {
         let due = dateOnly("2026-06-01")
         let task = sampleTask(title: "T", dueDate: due)

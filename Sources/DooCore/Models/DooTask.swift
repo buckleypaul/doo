@@ -10,6 +10,7 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
     public var dueDate: Date?
     public var dateAdded: Date
     public var dateCompleted: Date?
+    public var status: PipelineStatus
     public init(
         id: UUID = UUID(),
         title: String,
@@ -19,7 +20,8 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
         tags: [String] = [],
         dueDate: Date? = nil,
         dateAdded: Date = Date(),
-        dateCompleted: Date? = nil
+        dateCompleted: Date? = nil,
+        status: PipelineStatus = .untriaged
     ) {
         self.id = id
         self.title = title
@@ -30,6 +32,7 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
         self.dueDate = dueDate
         self.dateAdded = dateAdded
         self.dateCompleted = dateCompleted
+        self.status = status
     }
 }
 
@@ -45,7 +48,7 @@ extension DooTask {
     /// Custom date coding: dueDate uses yyyy-MM-dd, dateAdded/dateCompleted use ISO8601 with seconds
     enum CodingKeys: String, CodingKey {
         case id, title, description, notes, priority, tags
-        case dueDate, dateAdded, dateCompleted
+        case dueDate, dateAdded, dateCompleted, status
     }
 
     public init(from decoder: Decoder) throws {
@@ -59,6 +62,7 @@ extension DooTask {
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
         dateAdded = try container.decode(Date.self, forKey: .dateAdded)
         dateCompleted = try container.decodeIfPresent(Date.self, forKey: .dateCompleted)
+        status = (try? container.decodeIfPresent(PipelineStatus.self, forKey: .status)) ?? .untriaged
 
         // dueDate is date-only string "yyyy-MM-dd"
         if let dueDateString = try container.decodeIfPresent(String.self, forKey: .dueDate) {
@@ -81,6 +85,7 @@ extension DooTask {
         try container.encode(tags, forKey: .tags)
         try container.encode(dateAdded, forKey: .dateAdded)
         try container.encodeIfPresent(dateCompleted, forKey: .dateCompleted)
+        try container.encode(status, forKey: .status)
 
         // dueDate as date-only string
         if let dueDate {

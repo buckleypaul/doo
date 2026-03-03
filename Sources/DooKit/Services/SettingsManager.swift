@@ -28,6 +28,10 @@ public class SettingsManager {
         }
     }
 
+    public var groupByStatus: Bool {
+        didSet { saveConfig() }
+    }
+
     // MARK: - Private
 
     private let configURL: URL
@@ -50,6 +54,7 @@ public class SettingsManager {
         self.doneFilePath = config.doneFilePath
         self.hotkeyEnabled = config.hotkeyEnabled
         self.launchAtLogin = config.launchAtLogin
+        self.groupByStatus = config.groupByStatus
     }
 
     // MARK: - Persistence
@@ -59,7 +64,8 @@ public class SettingsManager {
             todoFilePath: todoFilePath,
             doneFilePath: doneFilePath,
             hotkeyEnabled: hotkeyEnabled,
-            launchAtLogin: launchAtLogin
+            launchAtLogin: launchAtLogin,
+            groupByStatus: groupByStatus
         )
         do {
             let dir = configURL.deletingLastPathComponent()

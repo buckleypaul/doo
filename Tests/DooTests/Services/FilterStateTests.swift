@@ -145,4 +145,40 @@ final class FilterStateTests: XCTestCase {
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result[0].title, "Fix login bug")
     }
+
+    func testFilterBySingleStatus() {
+        let tasksWithStatus = [
+            sampleTask(title: "A", status: .untriaged),
+            sampleTask(title: "B", status: .backlog),
+            sampleTask(title: "C", status: .inProgress),
+        ]
+        let filter = FilterState(selectedStatuses: [.backlog])
+        let result = filter.apply(to: tasksWithStatus)
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].title, "B")
+    }
+
+    func testFilterByMultipleStatuses() {
+        let tasksWithStatus = [
+            sampleTask(title: "A", status: .untriaged),
+            sampleTask(title: "B", status: .backlog),
+            sampleTask(title: "C", status: .inProgress),
+            sampleTask(title: "D", status: .inReview),
+        ]
+        let filter = FilterState(selectedStatuses: [.inProgress, .inReview])
+        let result = filter.apply(to: tasksWithStatus)
+        XCTAssertEqual(result.count, 2)
+        XCTAssertTrue(result.contains { $0.title == "C" })
+        XCTAssertTrue(result.contains { $0.title == "D" })
+    }
+
+    func testEmptyStatusSetReturnsAll() {
+        let tasksWithStatus = [
+            sampleTask(title: "A", status: .untriaged),
+            sampleTask(title: "B", status: .backlog),
+        ]
+        let filter = FilterState(selectedStatuses: [])
+        let result = filter.apply(to: tasksWithStatus)
+        XCTAssertEqual(result.count, 2)
+    }
 }

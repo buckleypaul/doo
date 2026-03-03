@@ -36,7 +36,8 @@ final class TaskEditTests: XCTestCase {
         removeTags: [String] = [],
         due: String? = nil,
         description: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        status: String? = nil
     ) throws {
         let store = makeStore()
         let allTasks = store.loadActiveTasks() + store.loadCompletedTasks()
@@ -60,6 +61,12 @@ final class TaskEditTests: XCTestCase {
         }
         if let n = notes {
             task.notes = n.lowercased() == "none" ? nil : n
+        }
+        if let s = status {
+            guard let parsed = PipelineStatus.fromShorthand(s) else {
+                throw CLIError.invalidStatus(s)
+            }
+            task.status = parsed
         }
         try store.updateTask(task)
     }
@@ -181,5 +188,17 @@ final class TaskEditTests: XCTestCase {
         try store.completeTask(store.loadActiveTasks()[0])
         try editTask(id: "1", title: "Edited Done")
         XCTAssertEqual(makeStore().loadCompletedTasks()[0].title, "Edited Done")
+    }
+
+    func testEditStatus() throws {
+        try makeStore().addTask(DooTask(title: "Task"))
+        try editTask(id: "1", status: "backlog")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .backlog)
+    }
+
+    func testEditStatusInProgress() throws {
+        try makeStore().addTask(DooTask(title: "Task"))
+        try editTask(id: "1", status: "in-progress")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .inProgress)
     }
 }

@@ -32,12 +32,52 @@ public enum TableFormatter {
         return lines.joined(separator: "\n")
     }
 
+    public static func formatGroupedTaskList(_ tasks: [DooTask]) -> String {
+        if tasks.isEmpty {
+            return "No tasks"
+        }
+
+        var lines: [String] = []
+        var globalIndex = 1
+
+        for status in PipelineStatus.allCases {
+            let group = tasks.filter { $0.status == status }
+            lines.append("")
+            lines.append("── \(status.displayName) (\(group.count)) ──")
+
+            if group.isEmpty {
+                lines.append("  (none)")
+            } else {
+                // Header
+                lines.append(
+                    pad("#", width: 4, right: false)
+                    + "  " + pad("ID", width: 8)
+                    + "  " + pad("P", width: 2)
+                    + "  " + pad("Title", width: 30)
+                    + "  " + pad("Due", width: 12)
+                    + "  " + "Tags"
+                )
+                lines.append(String(repeating: "-", count: 80))
+                for task in group {
+                    lines.append(formatRow(index: globalIndex, task: task))
+                    globalIndex += 1
+                }
+            }
+        }
+
+        lines.append("")
+        lines.append("\(tasks.count) task\(tasks.count == 1 ? "" : "s")")
+
+        return lines.joined(separator: "\n")
+    }
+
     public static func formatTaskDetail(_ task: DooTask) -> String {
         var lines: [String] = []
 
         lines.append("Title:       \(task.title)")
         lines.append("ID:          \(task.id.uuidString)")
         lines.append("Priority:    !\(task.priority)")
+        lines.append("Status:      \(task.status.displayName)")
 
         if !task.tags.isEmpty {
             lines.append("Tags:        \(task.tags.map { "#\($0)" }.joined(separator: " "))")

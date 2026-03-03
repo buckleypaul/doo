@@ -43,10 +43,24 @@ final class SettingsManagerTests: XCTestCase {
         XCTAssertEqual(manager2.todoFilePath, expectedTodoPath)
     }
 
-func testCorruptFileFallsBackToDefaults() throws {
+    func testCorruptFileFallsBackToDefaults() throws {
         try "not valid json {{{{".write(to: configURL, atomically: true, encoding: .utf8)
         let manager = SettingsManager(configURL: configURL)
         XCTAssertTrue(manager.hotkeyEnabled)
         XCTAssertTrue(manager.todoFilePath.hasSuffix("/.local/share/doo/todo.json"))
+    }
+
+    func testGroupByStatusDefaultsToTrue() throws {
+        let manager = SettingsManager(configURL: configURL)
+        XCTAssertTrue(manager.groupByStatus)
+    }
+
+    func testGroupByStatusPersists() throws {
+        do {
+            let manager = SettingsManager(configURL: configURL)
+            manager.groupByStatus = false
+        }
+        let manager2 = SettingsManager(configURL: configURL)
+        XCTAssertFalse(manager2.groupByStatus)
     }
 }

@@ -45,6 +45,19 @@ struct FilterToolbar: View {
                 }
             }
 
+            // Status pills
+            HStack(spacing: 2) {
+                ForEach(PipelineStatus.allCases) { status in
+                    FilterPill(status.displayName, isActive: filterState.selectedStatuses.contains(status)) {
+                        if filterState.selectedStatuses.contains(status) {
+                            filterState.selectedStatuses.remove(status)
+                        } else {
+                            filterState.selectedStatuses.insert(status)
+                        }
+                    }
+                }
+            }
+
             // Tags pill
             if !availableTags.isEmpty {
                 let label = filterState.selectedTags.isEmpty

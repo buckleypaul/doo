@@ -17,19 +17,22 @@ public struct FilterState: Sendable {
     public var selectedTags: Set<String> = []
     public var selectedPriorities: Set<Int> = []
     public var overdueOnly = false
+    public var selectedStatuses: Set<PipelineStatus> = []
 
     public init(
         searchText: String = "",
         sortOption: SortOption = .priority,
         selectedTags: Set<String> = [],
         selectedPriorities: Set<Int> = [],
-        overdueOnly: Bool = false
+        overdueOnly: Bool = false,
+        selectedStatuses: Set<PipelineStatus> = []
     ) {
         self.searchText = searchText
         self.sortOption = sortOption
         self.selectedTags = selectedTags
         self.selectedPriorities = selectedPriorities
         self.overdueOnly = overdueOnly
+        self.selectedStatuses = selectedStatuses
     }
 }
 
@@ -66,6 +69,11 @@ extension FilterState {
                 guard let dueDate = task.dueDate else { return false }
                 return DateFormatting.isOverdue(dueDate)
             }
+        }
+
+        // Status filter
+        if !selectedStatuses.isEmpty {
+            result = result.filter { selectedStatuses.contains($0.status) }
         }
 
         // Sort

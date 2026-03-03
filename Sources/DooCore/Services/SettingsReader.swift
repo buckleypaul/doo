@@ -5,17 +5,29 @@ public struct SettingsConfig: Codable, Sendable {
     public var doneFilePath: String
     public var hotkeyEnabled: Bool
     public var launchAtLogin: Bool
+    public var groupByStatus: Bool
 
     public init(
         todoFilePath: String,
         doneFilePath: String,
         hotkeyEnabled: Bool = true,
-        launchAtLogin: Bool = false
+        launchAtLogin: Bool = false,
+        groupByStatus: Bool = true
     ) {
         self.todoFilePath = todoFilePath
         self.doneFilePath = doneFilePath
         self.hotkeyEnabled = hotkeyEnabled
         self.launchAtLogin = launchAtLogin
+        self.groupByStatus = groupByStatus
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        todoFilePath = try container.decode(String.self, forKey: .todoFilePath)
+        doneFilePath = try container.decode(String.self, forKey: .doneFilePath)
+        hotkeyEnabled = try container.decodeIfPresent(Bool.self, forKey: .hotkeyEnabled) ?? true
+        launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
+        groupByStatus = try container.decodeIfPresent(Bool.self, forKey: .groupByStatus) ?? true
     }
 }
 

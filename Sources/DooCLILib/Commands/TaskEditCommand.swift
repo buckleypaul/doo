@@ -32,6 +32,9 @@ struct TaskEditCommand: ParsableCommand {
     @Option(name: .long, help: "Set notes (or 'none' to clear)")
     var notes: String?
 
+    @Option(name: .long, help: "Pipeline status (untriaged, backlog, inprogress, inreview)")
+    var status: String?
+
     func run() throws {
         let store = CLITaskStore()
         let allTasks = store.loadActiveTasks() + store.loadCompletedTasks()
@@ -59,6 +62,12 @@ struct TaskEditCommand: ParsableCommand {
         }
         if let n = notes {
             task.notes = n.lowercased() == "none" ? nil : n
+        }
+        if let s = status {
+            guard let parsed = PipelineStatus.fromShorthand(s) else {
+                throw CLIError.invalidStatus(s)
+            }
+            task.status = parsed
         }
 
         try store.updateTask(task)

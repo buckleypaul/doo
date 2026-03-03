@@ -33,7 +33,8 @@ final class TaskAddTests: XCTestCase {
         priority: Int? = nil,
         tags: [String] = [],
         due: String? = nil,
-        description: String? = nil
+        description: String? = nil,
+        status: String? = nil
     ) throws {
         var task = InlineSyntaxParser.parse(input)
         if let p = priority {
@@ -45,6 +46,12 @@ final class TaskAddTests: XCTestCase {
         }
         if let d = due { task.dueDate = DueDateParser.parse(d) }
         if let desc = description { task.description = desc }
+        if let s = status {
+            guard let parsed = PipelineStatus.fromShorthand(s) else {
+                throw CLIError.invalidStatus(s)
+            }
+            task.status = parsed
+        }
         try makeStore().addTask(task)
     }
 
@@ -137,5 +144,25 @@ final class TaskAddTests: XCTestCase {
         // addTask inserts at index 0, so "Second" is first
         XCTAssertEqual(tasks[0].title, "Second")
         XCTAssertEqual(tasks[1].title, "First")
+    }
+
+    func testDefaultStatusIsUntriaged() throws {
+        try addTask(input: "Task")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .untriaged)
+    }
+
+    func testInlineStatusToken() throws {
+        try addTask(input: "Task %backlog")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .backlog)
+    }
+
+    func testStatusFlagOverridesInlineStatus() throws {
+        try addTask(input: "Task %backlog", status: "inprogress")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .inProgress)
+    }
+
+    func testStatusFlagAlone() throws {
+        try addTask(input: "Task", status: "inreview")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].status, .inReview)
     }
 }

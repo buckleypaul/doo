@@ -63,4 +63,23 @@ final class TaskListFilterTests: XCTestCase {
     func testMaxPriorityOutOfRangeThrows() {
         XCTAssertThrowsError(try makeFilterState(args: ["--max-priority", "6"]))
     }
+
+    func testStatusFilter() throws {
+        let state = try makeFilterState(args: ["--status", "backlog"])
+        XCTAssertEqual(state.selectedStatuses, [.backlog])
+    }
+
+    func testMultipleStatusFilters() throws {
+        let state = try makeFilterState(args: ["--status", "backlog", "--status", "inprogress"])
+        XCTAssertEqual(state.selectedStatuses, [.backlog, .inProgress])
+    }
+
+    func testInvalidStatusThrows() {
+        XCTAssertThrowsError(try makeFilterState(args: ["--status", "bogus"]))
+    }
+
+    func testNoStatusFlagsProducesEmptySet() throws {
+        let state = try makeFilterState(args: [])
+        XCTAssertEqual(state.selectedStatuses, [])
+    }
 }

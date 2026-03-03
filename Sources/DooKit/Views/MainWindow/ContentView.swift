@@ -22,6 +22,7 @@ extension Notification.Name {
 
 public struct ContentView: View {
     @State var store: TaskStore
+    @State var settings = SettingsManager.shared
     @State private var selection: SidebarItem? = .todo
 
     public init(store: TaskStore) {
@@ -43,7 +44,7 @@ public struct ContentView: View {
         } detail: {
             switch selection {
             case .todo:
-                TodoListView(store: store)
+                TodoListView(store: store, settings: settings)
                     .navigationTitle("Todo")
             case .done:
                 DoneListView(store: store)

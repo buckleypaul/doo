@@ -37,6 +37,7 @@ Under `Tests/DooCLITests/`:
 - CLI task add command → `TaskAddTests`
 - CLI task edit command → `TaskEditTests`
 - CLI list filtering/priority ranges → `TaskListFilterTests`
+- CLI task move command → `TaskMoveTests`
 - CLI subtask commands → no test file yet (create `SubtaskTests.swift` when adding)
 
 Run `swift test` and confirm all tests pass before considering any change complete.
@@ -48,9 +49,10 @@ Sources/
   DooCore/                 # Pure Foundation library (shared between GUI + CLI)
     Models/
       DooTask.swift         # Codable task struct (custom date coding)
+      PipelineStatus.swift  # PipelineStatus enum: untriaged, backlog, inProgress, inReview
       Subtask.swift
     Services/
-      InlineSyntaxParser.swift  # parses "title !N #tag @date /description" → DooTask
+      InlineSyntaxParser.swift  # parses "title !N #tag @date %status /description" → DooTask
       FilterState.swift     # SortOption + FilterState (filter/sort logic)
       TaskFileIO.swift      # load/save tasks to JSON (atomic writes)
       SettingsReader.swift  # Read-only settings config + SettingsConfig struct
@@ -70,7 +72,7 @@ Sources/
     DooApp.swift            # @main — wires TaskStore → ContentView → AppDelegate
     AppDelegate.swift       # menu bar item, global hotkey (Option+Space)
   DooCLILib/               # CLI library target (testable)
-    Commands/               # ArgumentParser commands (task add/list/show/complete/uncomplete/edit/delete, subtask add/complete/delete)
+    Commands/               # ArgumentParser commands (task add/list/show/complete/uncomplete/edit/delete/move, subtask add/complete/delete)
     Services/
       CLITaskStore.swift    # Lightweight file I/O (no watchers/Observable)
       TaskIDResolver.swift  # Row number + UUID prefix resolution
@@ -90,7 +92,8 @@ Tests/
     Helpers/                # TestHelpers (shared factories + utilities)
   DooCLITests/             # XCTest target — imports DooCLILib + DooCore
                             # CLITaskStoreTests, TaskIDResolverTests, TableFormatterTests,
-                            # DueDateParserTests, TaskAddTests, TaskEditTests, TaskListFilterTests
+                            # DueDateParserTests, TaskAddTests, TaskEditTests, TaskListFilterTests,
+                            # TaskMoveTests
 ```
 
 The project uses library + executable splits so tests can `@testable import DooKit` / `@testable import DooCLILib`.
@@ -98,23 +101,29 @@ The project uses library + executable splits so tests can `@testable import DooK
 ## CLI Usage
 
 ```bash
-doo task add "Fix bug !1 #backend @tomorrow /check tokens"   # inline syntax
-doo task add "Fix bug" --priority 1 --tag backend --due tomorrow  # flags
+doo task add "Fix bug !1 #backend @tomorrow %backlog /check tokens"  # inline syntax
+doo task add "Fix bug" --priority 1 --tag backend --due tomorrow --status backlog  # flags
 doo task add "Fix bug !1" --tag extra                         # both merge
 
-doo task list                              # active tasks, compact table
-doo task list --done                       # completed tasks
+doo task list                              # active tasks, grouped by status
+doo task list --done                       # completed tasks (flat)
 doo task list --json                       # JSON output
 doo task list --tag backend --overdue --sort priority
 doo task list --search "bug" --min-priority 1 --max-priority 2
+doo task list --status backlog             # filter by pipeline status
+doo task list --status backlog --status inprogress  # multiple statuses
 
-doo task show <ID>                         # detailed view
+doo task show <ID>                         # detailed view (includes status)
 doo task show <ID> --json                  # JSON output
 
 doo task complete <ID>                     # mark complete
 doo task uncomplete <ID>                   # restore to active
 
+doo task move <ID> backlog                 # move to pipeline status
+doo task move <ID> inprogress              # accepts: untriaged, backlog, inprogress, inreview
+
 doo task edit <ID> --priority 2 --tag new --remove-tag old --due none
+doo task edit <ID> --status inreview       # change status via edit
 doo task delete <ID>
 
 doo task subtask add <taskID> "subtask title"
@@ -147,6 +156,7 @@ Both data paths are configurable in Settings. All paths are persisted in `~/.con
       "dueDate": "2026-03-10",
       "dateAdded": "2026-03-01T10:00:00Z",
       "dateCompleted": null,
+      "status": "untriaged",
       "description": "optional",
       "notes": "optional freeform",
       "subtasks": []
@@ -158,6 +168,7 @@ Both data paths are configurable in Settings. All paths are persisted in `~/.con
 - `dueDate` — date-only string `yyyy-MM-dd` (not ISO 8601)
 - `dateAdded` / `dateCompleted` — ISO 8601 with seconds
 - `priority` — integer 0 (highest) to 2 (lowest), default 2
+- `status` — pipeline status string: `"untriaged"`, `"backlog"`, `"in_progress"`, `"in_review"` (default `"untriaged"`, missing field decodes as untriaged)
 - `subtasks` — array of `{id, title, completed}`
 
 The GUI **live-reloads** within ~100 ms when JSON files change externally (including CLI edits).
@@ -165,10 +176,12 @@ The GUI **live-reloads** within ~100 ms when JSON files change externally (inclu
 ## Quick-add syntax (InlineSyntaxParser)
 
 ```
-title text [!0-2] [#tag …] [@today|tomorrow|yyyy-MM-dd] [/description text]
+title text [!0-2] [#tag …] [@today|tomorrow|yyyy-MM-dd] [%status] [/description text]
 ```
 
-Example: `Fix login bug !1 #backend @tomorrow /check token expiry`
+Example: `Fix login bug !1 #backend @tomorrow %backlog /check token expiry`
+
+Status shortcuts: `%untriaged`, `%backlog`, `%inprogress` (or `%in-progress`, `%in_progress`), `%inreview` (or `%in-review`, `%in_review`)
 
 ## Key patterns
 
@@ -181,3 +194,7 @@ Example: `Fix login bug !1 #backend @tomorrow /check token expiry`
 - `CLITaskStore` is a lightweight alternative to `TaskStore` — no file watchers, no `@Observable`, reads settings via `SettingsReader`
 - `DooTask.dueDateSortKey` / `dateCompletedSortKey` — non-optional `Date` proxies used by `Table` sort (`KeyPathComparator` requires `Comparable`; `Date?` is not)
 - GUI sort uses `[KeyPathComparator<DooTask>]` bound to `Table.sortOrder`; `FilterState.sortOption` is CLI-only — the GUI bypasses it
+- `PipelineStatus` enum defines 4 workflow stages (untriaged → backlog → in_progress → in_review); Done remains implicit via done.json
+- `PipelineStatus.fromShorthand()` normalizes various input formats (hyphens, underscores, camelCase) to enum cases
+- TodoListView supports grouped (DisclosureGroup per status) and flat (Table) views, toggled via `settings.groupByStatus`
+- CLI `task list` shows grouped output by default; `--status` filter or `--done` uses flat output

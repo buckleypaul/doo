@@ -9,6 +9,7 @@ public enum InlineSyntaxParser {
         var tags: [String] = []
         var dueDate: Date?
         var description: String?
+        var status: PipelineStatus = .untriaged
 
         // Extract /description (everything after first standalone /)
         if let slashRange = remaining.range(of: " /") {
@@ -38,6 +39,15 @@ public enum InlineSyntaxParser {
             remaining = remaining.replacing(match.0, with: " ", maxReplacements: 1)
         }
 
+        // Extract %status
+        let statusPattern = /\s*%(\S+)\s*/
+        if let match = remaining.firstMatch(of: statusPattern) {
+            if let parsed = PipelineStatus.fromShorthand(String(match.1)) {
+                status = parsed
+            }
+            remaining = remaining.replacing(match.0, with: " ", maxReplacements: 1)
+        }
+
         let title = remaining.trimmingCharacters(in: .whitespaces)
 
         return DooTask(
@@ -45,7 +55,8 @@ public enum InlineSyntaxParser {
             description: description,
             priority: priority,
             tags: tags,
-            dueDate: dueDate
+            dueDate: dueDate,
+            status: status
         )
     }
 
