@@ -109,8 +109,8 @@ Weekly review @2026-03-07 !2 #admin /go through inbox first
 
 Open Settings with **Cmd+,**. Available options:
 
-- **Todo file path** — path to the active tasks JSON file (default: `~/doo-todo.json`)
-- **Done file path** — path to the completed tasks JSON file (default: `~/doo-done.json`)
+- **Todo file path** — path to the active tasks JSON file (default: `~/.local/share/doo/todo.json`)
+- **Done file path** — path to the completed tasks JSON file (default: `~/.local/share/doo/done.json`)
 - **Global hotkey** — enable or disable the Option+Space Quick Add shortcut
 - **Launch at login** — start Doo automatically when you log in
 
@@ -123,14 +123,15 @@ Open Settings with **Cmd+,**. Available options:
 
 ## Data files
 
-Tasks are stored in two JSON files:
+Tasks are stored as plain JSON files:
 
 | File | Contents |
 |------|----------|
-| `~/doo-todo.json` | Active tasks |
-| `~/doo-done.json` | Completed tasks |
+| `~/.local/share/doo/todo.json` | Active tasks |
+| `~/.local/share/doo/done.json` | Completed tasks |
+| `~/.config/doo/settings.json` | App settings |
 
-Both paths are configurable in Settings. The files are created automatically on first launch.
+All files are created automatically on first launch. The data file paths are configurable in Settings.
 
 ### File format
 

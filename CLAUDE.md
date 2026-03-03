@@ -21,6 +21,7 @@ If `xcode-select -p` points to Command Line Tools (not Xcode), prefix with `DEVE
 - Model changes or new Codable fields → `DooTaskCodableTests` / `SubtaskCodableTests`
 - Filter / sort logic → `FilterStateTests`
 - CRUD or persistence → `TaskStoreTests`
+- Settings persistence → `SettingsManagerTests`
 - Date formatting → `DateFormattingTests`
 
 Run `swift test` and confirm all tests pass before considering any change complete.
