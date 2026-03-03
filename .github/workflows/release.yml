@@ -47,9 +47,6 @@ jobs:
       - name: Zip the app bundle
         run: ditto -c -k --sequesterRsrc --keepParent Doo.app Doo.zip
 
-      - name: Print SHA256 (for cask update)
-        run: shasum -a 256 Doo.zip
-
       - name: Create GitHub Release and upload zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,3 +58,19 @@ jobs:
             --title "v${VERSION}" \
             --generate-notes \
             Doo.zip
+
+      - name: Update homebrew-tap cask
+        env:
+          TAP_REPO_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          SHA=$(shasum -a 256 Doo.zip | awk '{print $1}')
+          git clone "https://x-access-token:${TAP_REPO_TOKEN}@github.com/buckleypaul/homebrew-tap.git" tap
+          cd tap
+          sed -i '' "s/sha256 \".*\"/sha256 \"${SHA}\"/" Casks/doo.rb
+          sed -i '' "s/version \".*\"/version \"${VERSION}\"/" Casks/doo.rb
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/doo.rb
+          git commit -m "chore: update doo cask to v${VERSION}"
+          git push
