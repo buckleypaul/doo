@@ -50,11 +50,17 @@ struct TaskListCommand: ParsableCommand {
     }
 
     private func buildFilterState() -> FilterState {
-        var minP = minPriority ?? 1
-        var maxP = maxPriority ?? 5
+        var selectedPriorities: Set<Int> = []
         if let p = priority {
-            minP = p
-            maxP = p
+            selectedPriorities = [p]
+        } else {
+            if let minP = minPriority, let maxP = maxPriority {
+                selectedPriorities = Set(minP...maxP)
+            } else if let minP = minPriority {
+                selectedPriorities = Set(minP...5)
+            } else if let maxP = maxPriority {
+                selectedPriorities = Set(1...maxP)
+            }
         }
 
         let sortOption: SortOption
@@ -79,8 +85,7 @@ struct TaskListCommand: ParsableCommand {
             searchText: search ?? "",
             sortOption: sortOption,
             selectedTags: Set(tag),
-            minPriority: minP,
-            maxPriority: maxP,
+            selectedPriorities: selectedPriorities,
             overdueOnly: overdue
         )
     }

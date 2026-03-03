@@ -15,23 +15,20 @@ public struct FilterState: Sendable {
     public var searchText = ""
     public var sortOption: SortOption = .priority
     public var selectedTags: Set<String> = []
-    public var minPriority: Int = 1
-    public var maxPriority: Int = 5
+    public var selectedPriorities: Set<Int> = []
     public var overdueOnly = false
 
     public init(
         searchText: String = "",
         sortOption: SortOption = .priority,
         selectedTags: Set<String> = [],
-        minPriority: Int = 1,
-        maxPriority: Int = 5,
+        selectedPriorities: Set<Int> = [],
         overdueOnly: Bool = false
     ) {
         self.searchText = searchText
         self.sortOption = sortOption
         self.selectedTags = selectedTags
-        self.minPriority = minPriority
-        self.maxPriority = maxPriority
+        self.selectedPriorities = selectedPriorities
         self.overdueOnly = overdueOnly
     }
 }
@@ -59,7 +56,9 @@ extension FilterState {
         }
 
         // Priority filter
-        result = result.filter { $0.priority >= minPriority && $0.priority <= maxPriority }
+        if !selectedPriorities.isEmpty {
+            result = result.filter { selectedPriorities.contains($0.priority) }
+        }
 
         // Overdue filter
         if overdueOnly {

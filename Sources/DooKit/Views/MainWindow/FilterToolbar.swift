@@ -41,18 +41,16 @@ struct FilterToolbar: View {
 
             // Filter popover
             Menu {
-                // Priority range
+                // Priority selection
                 Menu("Priority") {
                     ForEach(1...5, id: \.self) { p in
                         Toggle("P\(p)", isOn: Binding(
-                            get: { p >= filterState.minPriority && p <= filterState.maxPriority },
+                            get: { filterState.selectedPriorities.contains(p) },
                             set: { enabled in
                                 if enabled {
-                                    filterState.minPriority = min(filterState.minPriority, p)
-                                    filterState.maxPriority = max(filterState.maxPriority, p)
+                                    filterState.selectedPriorities.insert(p)
                                 } else {
-                                    if p == filterState.minPriority { filterState.minPriority = p + 1 }
-                                    if p == filterState.maxPriority { filterState.maxPriority = p - 1 }
+                                    filterState.selectedPriorities.remove(p)
                                 }
                             }
                         ))
@@ -104,8 +102,7 @@ struct FilterToolbar: View {
 
     private var hasActiveFilters: Bool {
         !filterState.selectedTags.isEmpty
-        || filterState.minPriority != 1
-        || filterState.maxPriority != 5
+        || !filterState.selectedPriorities.isEmpty
         || filterState.overdueOnly
     }
 }
