@@ -8,17 +8,17 @@ final class SettingsManagerTests: XCTestCase {
     private var tempDir: URL!
     private var configURL: URL!
 
-    override func setUp() async throws {
-        try await super.setUp()
+    override func setUp() {
+        super.setUp()
         tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("DooSettingsTests-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try! FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         configURL = tempDir.appendingPathComponent("settings.json")
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         try? FileManager.default.removeItem(at: tempDir)
-        try await super.tearDown()
+        super.tearDown()
     }
 
     func testFreshInitUsesDefaults() throws {

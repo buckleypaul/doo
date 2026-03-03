@@ -8,17 +8,17 @@ final class TaskStoreTests: XCTestCase {
     private var tempDir: URL!
     private var store: TaskStore!
 
-    override func setUp() async throws {
-        try await super.setUp()
+    override func setUp() {
+        super.setUp()
         tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("DooTests-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try! FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         store?.shutdown()
         try? FileManager.default.removeItem(at: tempDir)
-        try await super.tearDown()
+        super.tearDown()
     }
 
     private func makeStore() -> TaskStore {
