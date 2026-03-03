@@ -9,7 +9,7 @@ public class SettingsManager {
 
     // MARK: - Codable config
 
-    struct SettingsConfig: Codable {
+    private struct SettingsConfig: Codable {
         var todoFilePath: String
         var doneFilePath: String
         var hotkeyEnabled: Bool
@@ -85,7 +85,7 @@ public class SettingsManager {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             let data = try JSONEncoder().encode(config)
             let tmp = dir.appendingPathComponent(".settings.tmp")
-            try data.write(to: tmp, options: .atomic)
+            try data.write(to: tmp)
             _ = try FileManager.default.replaceItemAt(configURL, withItemAt: tmp)
         } catch {
             print("SettingsManager: failed to save config: \(error)")
