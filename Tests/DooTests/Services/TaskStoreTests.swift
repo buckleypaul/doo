@@ -1,24 +1,24 @@
 import Foundation
-import XCTest
+@preconcurrency import XCTest
 @testable import DooKit
 
 @MainActor
 final class TaskStoreTests: XCTestCase {
 
-    nonisolated(unsafe) private var tempDir: URL!
+    private var tempDir: URL!
     private var store: TaskStore!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("DooTests-\(UUID().uuidString)")
-        try! FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         store?.shutdown()
         try? FileManager.default.removeItem(at: tempDir)
-        super.tearDown()
+        try await super.tearDown()
     }
 
     private func makeStore() -> TaskStore {
