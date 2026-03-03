@@ -20,7 +20,7 @@ struct TaskDetailView: View {
                     get: { task.notes ?? "" },
                     set: { task.notes = $0.isEmpty ? nil : $0 }
                 ))
-                .frame(minHeight: 60)
+                .frame(minHeight: DooStyle.Spacing.lg * 4)
                 .font(.body)
             }
 
@@ -53,7 +53,7 @@ struct TaskDetailView: View {
             }
 
             Section("Tags") {
-                FlowLayout(spacing: 4) {
+                FlowLayout(spacing: DooStyle.Spacing.xs) {
                     ForEach(task.tags, id: \.self) { tag in
                         HStack(spacing: 2) {
                             Text(tag)
@@ -66,8 +66,8 @@ struct TaskDetailView: View {
                             }
                             .buttonStyle(.plain)
                         }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                        .padding(.vertical, DooStyle.Spacing.xs)
                         .background(.quaternary)
                         .clipShape(Capsule())
                     }

@@ -106,11 +106,11 @@ private struct FilterPill: View {
         Button(action: action) {
             Text(label)
                 .font(.callout)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(isActive ? Color.accentColor : Color.primary.opacity(0.1))
+                .padding(.horizontal, DooStyle.Spacing.sm)
+                .padding(.vertical, DooStyle.Spacing.xs)
+                .background(isActive ? Color.accentColor : Color.secondary.opacity(0.1))
                 .foregroundStyle(isActive ? Color(nsColor: .alternateSelectedControlTextColor) : Color.primary)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(RoundedRectangle(cornerRadius: DooStyle.Radius.pill))
         }
         .buttonStyle(.plain)
     }

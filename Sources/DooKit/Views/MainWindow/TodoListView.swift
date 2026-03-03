@@ -124,7 +124,7 @@ private struct InlineAddRow: View {
             }
 
             HStack(spacing: 16) {
-                hintItem("!1-5", label: "priority")
+                hintItem("!0-2", label: "priority")
                 hintItem("#tag", label: "tag")
                 hintItem("@today", label: "or @tomorrow")
                 hintItem("/text", label: "description")
@@ -132,8 +132,8 @@ private struct InlineAddRow: View {
             .font(.caption)
             .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, DooStyle.Spacing.lg)
+        .padding(.vertical, DooStyle.Spacing.sm)
     }
 
     private func hintItem(_ code: String, label: String) -> some View {

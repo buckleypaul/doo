@@ -24,19 +24,19 @@ struct QuickAddView: View {
                 }
 
             HStack(spacing: 16) {
-                hintItem("!1-5", label: "priority")
+                hintItem("!0-2", label: "priority")
                 hintItem("#tag", label: "tag")
                 hintItem("@date", label: "or @tomorrow")
                 hintItem("/text", label: "description")
             }
             .font(.caption)
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(.secondary)
         }
         .padding(20)
         .frame(width: 520)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(radius: 20, y: 10)
+        .shadow(radius: 16, y: 8)
         .onAppear {
             isFocused = true
         }
