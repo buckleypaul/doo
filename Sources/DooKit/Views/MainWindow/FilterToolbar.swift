@@ -3,7 +3,6 @@ import SwiftUI
 struct FilterToolbar: View {
     @Binding var filterState: FilterState
     let availableTags: [String]
-    let showDateCompleted: Bool
 
     @State private var showTagsPopover = false
     @State private var tagSearch = ""
@@ -32,15 +31,6 @@ struct FilterToolbar: View {
             .frame(maxWidth: 250)
 
             Spacer()
-
-            // Sort
-            Picker("Sort", selection: $filterState.sortOption) {
-                ForEach(sortOptions, id: \.id) { option in
-                    Text(option.rawValue).tag(option)
-                }
-            }
-            .pickerStyle(.menu)
-            .frame(width: 140)
 
             // Priority pills
             HStack(spacing: 2) {
@@ -84,9 +74,6 @@ struct FilterToolbar: View {
         .padding(.vertical, 6)
     }
 
-    private var sortOptions: [SortOption] {
-        showDateCompleted ? SortOption.allCases : SortOption.allCases.filter { $0 != .dateCompleted }
-    }
 }
 
 // MARK: - FilterPill

@@ -17,7 +17,7 @@ struct TodoListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            FilterToolbar(filterState: $filterState, availableTags: allTags, showDateCompleted: false)
+            FilterToolbar(filterState: $filterState, availableTags: allTags)
 
             Divider()
 
