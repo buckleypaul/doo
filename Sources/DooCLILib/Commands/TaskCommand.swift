@@ -12,7 +12,6 @@ public struct TaskCommand: ParsableCommand {
             TaskUncompleteCommand.self,
             TaskEditCommand.self,
             TaskDeleteCommand.self,
-            SubtaskCommand.self,
         ]
     )
 

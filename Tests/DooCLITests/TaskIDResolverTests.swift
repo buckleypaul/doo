@@ -59,19 +59,4 @@ final class TaskIDResolverTests: XCTestCase {
         }
     }
 
-    func testResolveSubtaskByRowNumber() throws {
-        let task = DooTask(title: "Parent", subtasks: [
-            Subtask(title: "Sub1"),
-            Subtask(title: "Sub2"),
-        ])
-        let sub = try TaskIDResolver.resolveSubtask("2", in: task)
-        XCTAssertEqual(sub.title, "Sub2")
-    }
-
-    func testResolveSubtaskOutOfRange() {
-        let task = DooTask(title: "Parent", subtasks: [Subtask(title: "Sub1")])
-        XCTAssertThrowsError(try TaskIDResolver.resolveSubtask("5", in: task)) { error in
-            XCTAssertEqual(error as? CLIError, CLIError.subtaskNotFound("5"))
-        }
-    }
 }

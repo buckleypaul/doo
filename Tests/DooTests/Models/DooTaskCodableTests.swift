@@ -22,8 +22,7 @@ final class DooTaskCodableTests: XCTestCase {
             priority: 1,
             tags: ["work", "urgent"],
             dueDate: dateOnly("2026-06-15"),
-            dateCompleted: Date(),
-            subtasks: [Subtask(title: "Sub 1", completed: true)]
+            dateCompleted: Date()
         )
         let decoded = try roundTrip(task)
         XCTAssertEqual(decoded.id, task.id)
@@ -32,9 +31,6 @@ final class DooTaskCodableTests: XCTestCase {
         XCTAssertEqual(decoded.notes, task.notes)
         XCTAssertEqual(decoded.priority, task.priority)
         XCTAssertEqual(decoded.tags, task.tags)
-        XCTAssertEqual(decoded.subtasks.count, 1)
-        XCTAssertEqual(decoded.subtasks[0].title, "Sub 1")
-        XCTAssertTrue(decoded.subtasks[0].completed)
         XCTAssertEqual(decoded.dueDate, task.dueDate)
         XCTAssertNotNil(decoded.dateCompleted)
     }
@@ -47,7 +43,6 @@ final class DooTaskCodableTests: XCTestCase {
         XCTAssertNil(decoded.notes)
         XCTAssertEqual(decoded.priority, 2)
         XCTAssertTrue(decoded.tags.isEmpty)
-        XCTAssertTrue(decoded.subtasks.isEmpty)
         XCTAssertNil(decoded.dueDate)
         XCTAssertNil(decoded.dateCompleted)
     }
@@ -93,8 +88,7 @@ final class DooTaskCodableTests: XCTestCase {
             "tags": ["grocery"],
             "dueDate": "2026-03-10",
             "dateAdded": "2026-03-01T10:00:00Z",
-            "dateCompleted": null,
-            "subtasks": []
+            "dateCompleted": null
         }
         """.data(using: .utf8)!
 
@@ -124,7 +118,6 @@ final class DooTaskCodableTests: XCTestCase {
 
         XCTAssertEqual(task.priority, 2)
         XCTAssertTrue(task.tags.isEmpty)
-        XCTAssertTrue(task.subtasks.isEmpty)
         XCTAssertNil(task.description)
         XCTAssertNil(task.notes)
     }

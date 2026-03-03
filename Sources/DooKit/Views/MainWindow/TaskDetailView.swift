@@ -3,7 +3,6 @@ import SwiftUI
 struct TaskDetailView: View {
     @Bindable var store: TaskStore
     @Binding var task: DooTask
-    @State private var newSubtaskTitle = ""
     @State private var newTag = ""
 
     var body: some View {
@@ -81,39 +80,6 @@ struct TaskDetailView: View {
                 }
             }
 
-            Section("Subtasks") {
-                ForEach($task.subtasks) { $subtask in
-                    HStack {
-                        Button {
-                            subtask.completed.toggle()
-                        } label: {
-                            Image(systemName: subtask.completed ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(subtask.completed ? .green : .secondary)
-                        }
-                        .buttonStyle(.plain)
-
-                        TextField("Subtask", text: $subtask.title)
-                            .strikethrough(subtask.completed)
-
-                        Spacer()
-
-                        Button {
-                            task.subtasks.removeAll { $0.id == subtask.id }
-                        } label: {
-                            Image(systemName: "trash")
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                HStack {
-                    TextField("Add subtask", text: $newSubtaskTitle)
-                        .onSubmit { addSubtask() }
-                    Button("Add", action: addSubtask)
-                        .disabled(newSubtaskTitle.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
         }
         .formStyle(.grouped)
         .onChange(of: task) { _, newValue in
@@ -128,12 +94,6 @@ struct TaskDetailView: View {
         newTag = ""
     }
 
-    private func addSubtask() {
-        let title = newSubtaskTitle.trimmingCharacters(in: .whitespaces)
-        guard !title.isEmpty else { return }
-        task.subtasks.append(Subtask(title: title))
-        newSubtaskTitle = ""
-    }
 }
 
 // Simple flow layout for tags

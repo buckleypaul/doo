@@ -23,8 +23,7 @@ func sampleTask(
     tags: [String] = [],
     dueDate: Date? = nil,
     dateAdded: Date = Date(),
-    dateCompleted: Date? = nil,
-    subtasks: [Subtask] = []
+    dateCompleted: Date? = nil
 ) -> DooTask {
     DooTask(
         id: id,
@@ -35,8 +34,7 @@ func sampleTask(
         tags: tags,
         dueDate: dueDate,
         dateAdded: dateAdded,
-        dateCompleted: dateCompleted,
-        subtasks: subtasks
+        dateCompleted: dateCompleted
     )
 }
 

@@ -62,15 +62,6 @@ public enum TableFormatter {
             lines.append("Notes:       \(notes)")
         }
 
-        if !task.subtasks.isEmpty {
-            lines.append("Subtasks:")
-            for (i, subtask) in task.subtasks.enumerated() {
-                let check = subtask.completed ? "[x]" : "[ ]"
-                let shortID = String(subtask.id.uuidString.prefix(8)).lowercased()
-                lines.append("  \(i + 1). \(check) \(subtask.title) (\(shortID))")
-            }
-        }
-
         return lines.joined(separator: "\n")
     }
 

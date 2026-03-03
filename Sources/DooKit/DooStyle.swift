@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 enum DooStyle {
@@ -27,4 +28,16 @@ enum DooStyle {
         static let badge: CGFloat = 18
         static let icon:  CGFloat = 16
     }
+}
+
+/// Applies the same NSVisualEffectView(.sidebar) background used by NavigationSplitView's sidebar column.
+struct SidebarMaterial: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .sidebar
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }

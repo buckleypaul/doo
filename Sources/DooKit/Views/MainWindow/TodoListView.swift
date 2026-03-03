@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct TodoListView: View {
@@ -8,6 +9,9 @@ struct TodoListView: View {
     @FocusState private var isInputFocused: Bool
     @State private var selectedTaskID: DooTask.ID?
     @State private var sortOrder = [KeyPathComparator(\DooTask.priority)]
+    @State private var showDetail = true
+    @State private var savedDetailWidth: CGFloat = 320
+    @State private var dragStartWidth: CGFloat? = nil
 
     private var displayedTasks: [DooTask] {
         filterState.apply(to: store.activeTasks).sorted(using: sortOrder)
@@ -18,29 +22,47 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            FilterToolbar(filterState: $filterState, availableTags: allTags)
-            Divider()
-            InlineAddRow(input: $newTaskInput, isFocused: $isInputFocused) {
-                submitNewTask()
+        HStack(spacing: 0) {
+            VStack(spacing: 0) {
+                FilterToolbar(filterState: $filterState, availableTags: allTags)
+                Divider()
+                InlineAddRow(input: $newTaskInput, isFocused: $isInputFocused) {
+                    submitNewTask()
+                }
+                Divider()
+                taskContent
             }
-            Divider()
-            taskContent
-        }
-        .inspector(isPresented: Binding(
-            get: { selectedTaskID != nil },
-            set: { if !$0 { selectedTaskID = nil } }
-        )) {
-            if let id = selectedTaskID,
-               let index = store.activeTasks.firstIndex(where: { $0.id == id }) {
-                TaskDetailView(store: store, task: $store.activeTasks[index])
-            } else {
-                Text("Select a task")
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(minWidth: 300, maxWidth: .infinity)
+
+            if showDetail {
+                Color(nsColor: .separatorColor)
+                    .frame(width: 1)
+                    .frame(width: 9)
+                    .contentShape(Rectangle())
+                    .onHover { hovering in
+                        if hovering { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
+                    }
+                    .gesture(
+                        DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                            .onChanged { value in
+                                if dragStartWidth == nil { dragStartWidth = savedDetailWidth }
+                                savedDetailWidth = max(220, min(700, (dragStartWidth ?? savedDetailWidth) - value.translation.width))
+                            }
+                            .onEnded { _ in dragStartWidth = nil }
+                    )
+
+                detailPanel
+                    .frame(width: savedDetailWidth)
             }
         }
-        .inspectorColumnWidth(min: 260, ideal: 320, max: 420)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button { showDetail.toggle() } label: {
+                    Image(systemName: "sidebar.right")
+                }
+                .help("Toggle Detail Panel")
+            }
+        }
         .onChange(of: store.activeTasks) { _, tasks in
             if let id = selectedTaskID, !tasks.contains(where: { $0.id == id }) {
                 selectedTaskID = nil
@@ -65,6 +87,21 @@ struct TodoListView: View {
     }
 
     @ViewBuilder
+    private var detailPanel: some View {
+        VStack(spacing: 0) {
+            if let id = selectedTaskID,
+               let index = store.activeTasks.firstIndex(where: { $0.id == id }) {
+                TaskDetailView(store: store, task: $store.activeTasks[index])
+            } else {
+                Text("Select a task")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .background(SidebarMaterial())
+    }
+
+    @ViewBuilder
     private var taskContent: some View {
         if displayedTasks.isEmpty {
             ContentUnavailableView(
@@ -74,7 +111,10 @@ struct TodoListView: View {
             )
             .frame(maxHeight: .infinity)
         } else {
-            Table(displayedTasks, selection: $selectedTaskID, sortOrder: $sortOrder) {
+            Table(displayedTasks, selection: Binding(
+                get: { selectedTaskID },
+                set: { if let id = $0 { selectedTaskID = id } }
+            ), sortOrder: $sortOrder) {
                 TableColumn("Title", value: \.title) { task in
                     Text(task.title)
                 }

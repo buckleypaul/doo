@@ -10,8 +10,6 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
     public var dueDate: Date?
     public var dateAdded: Date
     public var dateCompleted: Date?
-    public var subtasks: [Subtask]
-
     public init(
         id: UUID = UUID(),
         title: String,
@@ -21,8 +19,7 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
         tags: [String] = [],
         dueDate: Date? = nil,
         dateAdded: Date = Date(),
-        dateCompleted: Date? = nil,
-        subtasks: [Subtask] = []
+        dateCompleted: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -33,7 +30,6 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
         self.dueDate = dueDate
         self.dateAdded = dateAdded
         self.dateCompleted = dateCompleted
-        self.subtasks = subtasks
     }
 }
 
@@ -49,7 +45,7 @@ extension DooTask {
     /// Custom date coding: dueDate uses yyyy-MM-dd, dateAdded/dateCompleted use ISO8601 with seconds
     enum CodingKeys: String, CodingKey {
         case id, title, description, notes, priority, tags
-        case dueDate, dateAdded, dateCompleted, subtasks
+        case dueDate, dateAdded, dateCompleted
     }
 
     public init(from decoder: Decoder) throws {
@@ -61,7 +57,6 @@ extension DooTask {
         let rawPriority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 2
         priority = min(max(0, rawPriority), 2)   // migrate old values (3-5 → 2)
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
-        subtasks = try container.decodeIfPresent([Subtask].self, forKey: .subtasks) ?? []
         dateAdded = try container.decode(Date.self, forKey: .dateAdded)
         dateCompleted = try container.decodeIfPresent(Date.self, forKey: .dateCompleted)
 
@@ -86,7 +81,6 @@ extension DooTask {
         try container.encode(tags, forKey: .tags)
         try container.encode(dateAdded, forKey: .dateAdded)
         try container.encodeIfPresent(dateCompleted, forKey: .dateCompleted)
-        try container.encodeIfPresent(subtasks.isEmpty ? nil : subtasks, forKey: .subtasks)
 
         // dueDate as date-only string
         if let dueDate {

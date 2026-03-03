@@ -49,8 +49,7 @@ final class TableFormatterTests: XCTestCase {
             notes: "Some notes",
             priority: 1,
             tags: ["work", "urgent"],
-            dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()),
-            subtasks: [Subtask(title: "Sub 1"), Subtask(title: "Sub 2", completed: true)]
+            dueDate: Calendar.current.date(byAdding: .day, value: 1, to: Date())
         )
         let output = TableFormatter.formatTaskDetail(task)
 
@@ -60,8 +59,6 @@ final class TableFormatterTests: XCTestCase {
         XCTAssertTrue(output.contains("#urgent"))
         XCTAssertTrue(output.contains("Description: A description"))
         XCTAssertTrue(output.contains("Notes:       Some notes"))
-        XCTAssertTrue(output.contains("[ ] Sub 1"))
-        XCTAssertTrue(output.contains("[x] Sub 2"))
     }
 
     func testDetailViewOmitsEmptyFields() {
@@ -73,6 +70,5 @@ final class TableFormatterTests: XCTestCase {
         XCTAssertFalse(output.contains("Due:"))
         XCTAssertFalse(output.contains("Description:"))
         XCTAssertFalse(output.contains("Notes:"))
-        XCTAssertFalse(output.contains("Subtasks:"))
     }
 }

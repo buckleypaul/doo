@@ -3,8 +3,6 @@ import Foundation
 public enum CLIError: LocalizedError, Equatable {
     case taskNotFound(String)
     case ambiguousTaskID(String, Int)
-    case subtaskNotFound(String)
-    case ambiguousSubtaskID(String, Int)
     case emptyTitle
     case invalidPriority(Int)
 
@@ -14,10 +12,6 @@ public enum CLIError: LocalizedError, Equatable {
             return "No task found matching '\(id)'"
         case .ambiguousTaskID(let id, let count):
             return "Ambiguous task ID '\(id)' matches \(count) tasks"
-        case .subtaskNotFound(let id):
-            return "No subtask found matching '\(id)'"
-        case .ambiguousSubtaskID(let id, let count):
-            return "Ambiguous subtask ID '\(id)' matches \(count) subtasks"
         case .emptyTitle:
             return "Task title cannot be empty"
         case .invalidPriority(let p):
