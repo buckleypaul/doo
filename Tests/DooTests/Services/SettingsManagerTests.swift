@@ -43,6 +43,16 @@ final class SettingsManagerTests: XCTestCase {
         XCTAssertEqual(manager2.todoFilePath, expectedTodoPath)
     }
 
+    func testDefaultsPersistedOnFirstInit() throws {
+        // Verify that simply initing SettingsManager writes defaults to disk,
+        // so a subsequent cold re-init gets the same values without any mutations.
+        _ = SettingsManager(configURL: configURL)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: configURL.path), "settings file should be written on first init")
+        let manager2 = SettingsManager(configURL: configURL)
+        XCTAssertTrue(manager2.hotkeyEnabled)
+        XCTAssertFalse(manager2.launchAtLogin)
+    }
+
     func testCorruptFileFallsBackToDefaults() throws {
         try "not valid json {{{{".write(to: configURL, atomically: true, encoding: .utf8)
         let manager = SettingsManager(configURL: configURL)

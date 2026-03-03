@@ -46,6 +46,7 @@ public class SettingsManager {
     public convenience init() {
         let configDir = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".config/doo")
+        try? FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
         let url = configDir.appendingPathComponent("settings.json")
         self.init(configURL: url)
     }
@@ -68,6 +69,7 @@ public class SettingsManager {
             self.doneFilePath = defaultDone
             self.hotkeyEnabled = true
             self.launchAtLogin = false
+            saveConfig()
         }
     }
 
