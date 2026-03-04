@@ -98,15 +98,15 @@ struct SectionedTaskListView: View {
             Spacer().frame(width: checkWidth)
             Text("Title")
                 .frame(maxWidth: .infinity, alignment: .leading)
-            columnDivider(width: $statusWidth)
+            columnDivider(rightWidth: $statusWidth)
             Text("Status").frame(width: statusWidth, alignment: .leading)
-            columnDivider(width: $priorityWidth)
+            columnDivider(rightWidth: $priorityWidth)
             Text("Priority").frame(width: priorityWidth, alignment: .center)
-            columnDivider(width: $tagsWidth)
+            columnDivider(rightWidth: $tagsWidth)
             Text("Tags").frame(width: tagsWidth, alignment: .leading)
-            columnDivider(width: $dueWidth)
+            columnDivider(rightWidth: $dueWidth)
             Text("Due").frame(width: dueWidth, alignment: .leading)
-            columnDivider(width: $addedWidth)
+            columnDivider(rightWidth: $addedWidth)
             Text("Added").frame(width: addedWidth, alignment: .leading)
             Spacer().frame(width: deleteWidth)
         }
@@ -118,8 +118,8 @@ struct SectionedTaskListView: View {
         .background(DooStyle.surface)
     }
 
-    private func columnDivider(width: Binding<CGFloat>) -> some View {
-        ColumnResizeHandle(width: width)
+    private func columnDivider(rightWidth: Binding<CGFloat>) -> some View {
+        ColumnResizeHandle(rightWidth: rightWidth)
     }
 
     // MARK: - Detail panel
@@ -316,6 +316,8 @@ struct SectionedTaskListView: View {
                     }
             }
 
+            Spacer().frame(width: 7) // match header divider width
+
             // Status
             Button {
                 statusPopoverTaskID = task.id
@@ -333,9 +335,13 @@ struct SectionedTaskListView: View {
             }
             .frame(width: statusWidth, alignment: .leading)
 
+            Spacer().frame(width: 7)
+
             // Priority
             PriorityBadge(priority: task.priority)
                 .frame(width: priorityWidth, alignment: .center)
+
+            Spacer().frame(width: 7)
 
             // Tags
             HStack(spacing: 2) {
@@ -369,6 +375,8 @@ struct SectionedTaskListView: View {
             .frame(width: tagsWidth, alignment: .leading)
             .clipped()
 
+            Spacer().frame(width: 7)
+
             // Due date
             Button {
                 dueDatePopoverTaskID = task.id
@@ -395,6 +403,8 @@ struct SectionedTaskListView: View {
                 InlineDueDateEditor(task: task, store: store)
             }
             .frame(width: dueWidth, alignment: .leading)
+
+            Spacer().frame(width: 7)
 
             // Added date
             Text(DateFormatting.relative(task.dateAdded))
@@ -477,7 +487,7 @@ struct SectionedTaskListView: View {
 // MARK: - Column resize handle
 
 private struct ColumnResizeHandle: View {
-    @Binding var width: CGFloat
+    @Binding var rightWidth: CGFloat
     @State private var startWidth: CGFloat?
 
     var body: some View {
@@ -490,10 +500,11 @@ private struct ColumnResizeHandle: View {
                 if hovering { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
             }
             .gesture(
-                DragGesture(minimumDistance: 1)
+                DragGesture(minimumDistance: 1, coordinateSpace: .global)
                     .onChanged { value in
-                        if startWidth == nil { startWidth = width }
-                        width = max(40, (startWidth ?? width) + value.translation.width)
+                        if startWidth == nil { startWidth = rightWidth }
+                        guard let start = startWidth else { return }
+                        rightWidth = max(40, start - value.translation.width)
                     }
                     .onEnded { _ in startWidth = nil }
             )
