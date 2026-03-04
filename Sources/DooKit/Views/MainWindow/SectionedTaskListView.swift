@@ -13,6 +13,7 @@ struct SectionedTaskListView: View {
     @State private var editorSectionID: UUID?
     @State private var tagPopoverTaskID: DooTask.ID?
     @State private var statusPopoverTaskID: DooTask.ID?
+    @State private var priorityPopoverTaskID: DooTask.ID?
     @State private var dueDatePopoverTaskID: DooTask.ID?
     @State private var hoveredTaskID: DooTask.ID?
     @State private var editingTitleTaskID: DooTask.ID?
@@ -43,8 +44,6 @@ struct SectionedTaskListView: View {
                 InlineAddRow(input: $newTaskInput, isFocused: $isInputFocused) {
                     submitNewTask()
                 }
-                Divider()
-                columnHeader
                 Divider()
                 sectionContent
             }
@@ -91,23 +90,28 @@ struct SectionedTaskListView: View {
         }
     }
 
-    // MARK: - Column header
+    // MARK: - Per-section column header
 
-    private var columnHeader: some View {
+    private func sectionColumnHeader(_ section: TaskSection) -> some View {
         HStack(spacing: 0) {
             Spacer().frame(width: checkWidth)
-            Text("Title")
+            sortHeaderButton("Title", column: "title", section: section)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            columnDivider(rightWidth: $statusWidth)
-            Text("Status").frame(width: statusWidth, alignment: .leading)
-            columnDivider(rightWidth: $priorityWidth)
-            Text("Priority").frame(width: priorityWidth, alignment: .center)
-            columnDivider(rightWidth: $tagsWidth)
-            Text("Tags").frame(width: tagsWidth, alignment: .leading)
-            columnDivider(rightWidth: $dueWidth)
-            Text("Due").frame(width: dueWidth, alignment: .leading)
-            columnDivider(rightWidth: $addedWidth)
-            Text("Added").frame(width: addedWidth, alignment: .leading)
+            ColumnResizeHandle(rightWidth: $statusWidth)
+            sortHeaderButton("Status", column: "status", section: section)
+                .frame(width: statusWidth, alignment: .leading)
+            ColumnResizeHandle(rightWidth: $priorityWidth)
+            sortHeaderButton("Priority", column: "priority", section: section)
+                .frame(width: priorityWidth, alignment: .center)
+            ColumnResizeHandle(rightWidth: $tagsWidth)
+            sortHeaderButton("Tags", column: "tags", section: section)
+                .frame(width: tagsWidth, alignment: .leading)
+            ColumnResizeHandle(rightWidth: $dueWidth)
+            sortHeaderButton("Due", column: "dueDate", section: section)
+                .frame(width: dueWidth, alignment: .leading)
+            ColumnResizeHandle(rightWidth: $addedWidth)
+            sortHeaderButton("Added", column: "dateAdded", section: section)
+                .frame(width: addedWidth, alignment: .leading)
             Spacer().frame(width: deleteWidth)
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -118,8 +122,22 @@ struct SectionedTaskListView: View {
         .background(DooStyle.surface)
     }
 
-    private func columnDivider(rightWidth: Binding<CGFloat>) -> some View {
-        ColumnResizeHandle(rightWidth: rightWidth)
+    private func sortHeaderButton(_ label: String, column: String, section: TaskSection) -> some View {
+        let isActive = section.sortColumn == column
+        return Button { toggleSort(column: column, in: section) } label: {
+            HStack(spacing: 2) {
+                Text(label)
+                if isActive {
+                    Image(systemName: section.sortAscending ? "chevron.up" : "chevron.down")
+                        .font(.caption2)
+                } else {
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 7))
+                        .foregroundStyle(DooStyle.textTertiary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Detail panel
@@ -264,6 +282,9 @@ struct SectionedTaskListView: View {
                 .padding(.horizontal, DooStyle.Spacing.md)
 
             if !section.isCollapsed {
+                sectionColumnHeader(section)
+                Divider()
+                    .padding(.horizontal, DooStyle.Spacing.md)
                 if tasks.isEmpty {
                     Text("No matching tasks")
                         .font(.caption)
@@ -338,8 +359,19 @@ struct SectionedTaskListView: View {
             Spacer().frame(width: 7)
 
             // Priority
-            PriorityBadge(priority: task.priority)
-                .frame(width: priorityWidth, alignment: .center)
+            Button {
+                priorityPopoverTaskID = task.id
+            } label: {
+                PriorityBadge(priority: task.priority)
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: Binding(
+                get: { priorityPopoverTaskID == task.id },
+                set: { if !$0 { priorityPopoverTaskID = nil } }
+            )) {
+                InlinePriorityEditor(task: task, store: store)
+            }
+            .frame(width: priorityWidth, alignment: .center)
 
             Spacer().frame(width: 7)
 
@@ -456,7 +488,47 @@ struct SectionedTaskListView: View {
     // MARK: - Helpers
 
     private func tasksForSection(_ section: TaskSection) -> [DooTask] {
-        section.toFilterState().apply(to: store.activeTasks)
+        let filtered = section.toFilterState().apply(to: store.activeTasks)
+        let asc = section.sortAscending
+        return filtered.sorted { a, b in
+            switch section.sortColumn {
+            case "title":
+                let r = a.title.localizedCompare(b.title)
+                return asc ? r == .orderedAscending : r == .orderedDescending
+            case "status":
+                let order = PipelineStatus.allCases
+                let ai = order.firstIndex(of: a.status) ?? 0
+                let bi = order.firstIndex(of: b.status) ?? 0
+                return asc ? ai < bi : ai > bi
+            case "tags":
+                let aTag = a.tags.sorted().first ?? ""
+                let bTag = b.tags.sorted().first ?? ""
+                if aTag.isEmpty && bTag.isEmpty { return false }
+                if aTag.isEmpty { return !asc }
+                if bTag.isEmpty { return asc }
+                let r = aTag.localizedCompare(bTag)
+                return asc ? r == .orderedAscending : r == .orderedDescending
+            case "dueDate":
+                let aDate = a.dueDate ?? .distantFuture
+                let bDate = b.dueDate ?? .distantFuture
+                return asc ? aDate < bDate : aDate > bDate
+            case "dateAdded":
+                return asc ? a.dateAdded < b.dateAdded : a.dateAdded > b.dateAdded
+            default: // "priority"
+                return asc ? a.priority < b.priority : a.priority > b.priority
+            }
+        }
+    }
+
+    private func toggleSort(column: String, in section: TaskSection) {
+        var updated = section
+        if updated.sortColumn == column {
+            updated.sortAscending.toggle()
+        } else {
+            updated.sortColumn = column
+            updated.sortAscending = true
+        }
+        settings.updateSection(updated)
     }
 
     private func submitNewTask() {

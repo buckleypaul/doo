@@ -102,6 +102,50 @@ struct InlineStatusEditor: View {
     }
 }
 
+struct InlinePriorityEditor: View {
+    let task: DooTask
+    let store: TaskStore
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(0...2, id: \.self) { priority in
+                Button {
+                    var updated = task
+                    updated.priority = priority
+                    store.updateTask(updated)
+                    dismiss()
+                } label: {
+                    HStack {
+                        PriorityBadge(priority: priority)
+                        Text(priorityLabel(priority))
+                            .font(.callout)
+                        Spacer()
+                        if task.priority == priority {
+                            Image(systemName: "checkmark")
+                                .font(.caption)
+                                .foregroundStyle(DooStyle.accent)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .padding(.horizontal, DooStyle.Spacing.md)
+                    .padding(.vertical, DooStyle.Spacing.sm)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .frame(minWidth: 140)
+    }
+
+    private func priorityLabel(_ priority: Int) -> String {
+        switch priority {
+        case 0: return "High"
+        case 1: return "Medium"
+        default: return "Low"
+        }
+    }
+}
+
 struct InlineDueDateEditor: View {
     @State private var date: Date
     @State private var hasDueDate: Bool
