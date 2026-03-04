@@ -2,18 +2,18 @@ import Foundation
 
 public enum InlineSyntaxParser {
     /// Parse quick-add input text into a DooTask.
-    /// Syntax: `title text !N #tag @date /description`
+    /// Syntax: `title text !N #tag @date /notes`
     public static func parse(_ input: String) -> DooTask {
         var remaining = input
         var priority = 2
         var tags: [String] = []
         var dueDate: Date?
-        var description: String?
+        var notes: String?
         var status: PipelineStatus = .triage
 
-        // Extract /description (everything after first standalone /)
+        // Extract /notes (everything after first standalone /)
         if let slashRange = remaining.range(of: " /") {
-            description = String(remaining[slashRange.upperBound...]).trimmingCharacters(in: .whitespaces)
+            notes = String(remaining[slashRange.upperBound...]).trimmingCharacters(in: .whitespaces)
             remaining = String(remaining[..<slashRange.lowerBound])
         }
 
@@ -52,7 +52,7 @@ public enum InlineSyntaxParser {
 
         return DooTask(
             title: title.isEmpty ? "Untitled" : title,
-            description: description,
+            notes: notes,
             priority: priority,
             tags: tags,
             dueDate: dueDate,

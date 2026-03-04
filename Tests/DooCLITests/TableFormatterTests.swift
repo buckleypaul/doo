@@ -45,7 +45,6 @@ final class TableFormatterTests: XCTestCase {
     func testDetailViewShowsAllFields() {
         let task = DooTask(
             title: "Detailed task",
-            description: "A description",
             notes: "Some notes",
             priority: 1,
             tags: ["work", "urgent"],
@@ -57,7 +56,6 @@ final class TableFormatterTests: XCTestCase {
         XCTAssertTrue(output.contains("Priority:    !1"))
         XCTAssertTrue(output.contains("#work"))
         XCTAssertTrue(output.contains("#urgent"))
-        XCTAssertTrue(output.contains("Description: A description"))
         XCTAssertTrue(output.contains("Notes:       Some notes"))
     }
 
@@ -68,7 +66,6 @@ final class TableFormatterTests: XCTestCase {
         XCTAssertTrue(output.contains("Title:       Minimal task"))
         XCTAssertFalse(output.contains("Tags:"))
         XCTAssertFalse(output.contains("Due:"))
-        XCTAssertFalse(output.contains("Description:"))
         XCTAssertFalse(output.contains("Notes:"))
     }
 

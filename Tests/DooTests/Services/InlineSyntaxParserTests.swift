@@ -93,12 +93,12 @@ final class InlineSyntaxParserTests: XCTestCase {
         XCTAssertNil(task.dueDate)
     }
 
-    // MARK: - Description
+    // MARK: - Notes
 
-    func testParsesDescription() {
+    func testParsesNotes() {
         let task = InlineSyntaxParser.parse("Fix login /check token expiry")
         XCTAssertEqual(task.title, "Fix login")
-        XCTAssertEqual(task.description, "check token expiry")
+        XCTAssertEqual(task.notes, "check token expiry")
     }
 
     // MARK: - Status
@@ -148,7 +148,7 @@ final class InlineSyntaxParserTests: XCTestCase {
         XCTAssertEqual(task.priority, 0)
         XCTAssertEqual(task.tags, ["backend"])
         XCTAssertNotNil(task.dueDate)
-        XCTAssertEqual(task.description, "check token expiry")
+        XCTAssertEqual(task.notes, "check token expiry")
     }
 
     func testParsesAllTokensWithStatus() {
@@ -158,6 +158,6 @@ final class InlineSyntaxParserTests: XCTestCase {
         XCTAssertEqual(task.status, .backlog)
         XCTAssertEqual(task.tags, ["backend"])
         XCTAssertNotNil(task.dueDate)
-        XCTAssertEqual(task.description, "desc")
+        XCTAssertEqual(task.notes, "desc")
     }
 }

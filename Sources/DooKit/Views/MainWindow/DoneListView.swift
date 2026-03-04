@@ -6,9 +6,6 @@ struct DoneListView: View {
     @State private var filterState = FilterState(sortOption: .dateCompleted)
     @State private var selectedTaskID: DooTask.ID?
     @State private var sortOrder = [KeyPathComparator(\DooTask.dateCompletedSortKey, order: .reverse)]
-    @State private var showDetail = true
-    @State private var savedDetailWidth: CGFloat = 320
-    @State private var dragStartWidth: CGFloat? = nil
 
     private var displayedTasks: [DooTask] {
         filterState.apply(to: store.completedTasks).sorted(using: sortOrder)
@@ -19,63 +16,17 @@ struct DoneListView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            VStack(spacing: 0) {
-                FilterToolbar(filterState: $filterState, availableTags: allTags)
-                Divider()
-                taskContent
-            }
-            .frame(minWidth: 300, maxWidth: .infinity)
-
-            if showDetail {
-                DooStyle.separator
-                    .frame(width: 1)
-                    .frame(width: 9)
-                    .contentShape(Rectangle())
-                    .onHover { hovering in
-                        if hovering { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
-                    }
-                    .gesture(
-                        DragGesture(minimumDistance: 0, coordinateSpace: .global)
-                            .onChanged { value in
-                                if dragStartWidth == nil { dragStartWidth = savedDetailWidth }
-                                savedDetailWidth = max(220, min(700, (dragStartWidth ?? savedDetailWidth) - value.translation.width))
-                            }
-                            .onEnded { _ in dragStartWidth = nil }
-                    )
-
-                detailPanel
-                    .frame(width: savedDetailWidth)
-            }
+        VStack(spacing: 0) {
+            FilterToolbar(filterState: $filterState, availableTags: allTags)
+            Divider()
+            taskContent
         }
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Button { showDetail.toggle() } label: {
-                    Image(systemName: "sidebar.right")
-                }
-                .help("Toggle Detail Panel")
-            }
-        }
+        .frame(minWidth: 300, maxWidth: .infinity)
         .onChange(of: store.completedTasks) { _, tasks in
             if let id = selectedTaskID, !tasks.contains(where: { $0.id == id }) {
                 selectedTaskID = nil
             }
         }
-    }
-
-    @ViewBuilder
-    private var detailPanel: some View {
-        VStack(spacing: 0) {
-            if let id = selectedTaskID,
-               let index = store.completedTasks.firstIndex(where: { $0.id == id }) {
-                TaskDetailView(store: store, task: $store.completedTasks[index])
-            } else {
-                Text("Select a task")
-                    .foregroundStyle(DooStyle.textSecondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .background(DooStyle.surface)
     }
 
     @ViewBuilder

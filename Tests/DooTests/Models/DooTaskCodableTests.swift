@@ -17,7 +17,6 @@ final class DooTaskCodableTests: XCTestCase {
     func testRoundTripWithAllFields() throws {
         let task = sampleTask(
             title: "Test",
-            description: "A description",
             notes: "Some notes",
             priority: 1,
             tags: ["work", "urgent"],
@@ -27,7 +26,6 @@ final class DooTaskCodableTests: XCTestCase {
         let decoded = try roundTrip(task)
         XCTAssertEqual(decoded.id, task.id)
         XCTAssertEqual(decoded.title, task.title)
-        XCTAssertEqual(decoded.description, task.description)
         XCTAssertEqual(decoded.notes, task.notes)
         XCTAssertEqual(decoded.priority, task.priority)
         XCTAssertEqual(decoded.tags, task.tags)
@@ -39,7 +37,6 @@ final class DooTaskCodableTests: XCTestCase {
         let task = sampleTask(title: "Minimal")
         let decoded = try roundTrip(task)
         XCTAssertEqual(decoded.title, "Minimal")
-        XCTAssertNil(decoded.description)
         XCTAssertNil(decoded.notes)
         XCTAssertEqual(decoded.priority, 2)
         XCTAssertTrue(decoded.tags.isEmpty)
@@ -118,7 +115,6 @@ final class DooTaskCodableTests: XCTestCase {
 
         XCTAssertEqual(task.priority, 2)
         XCTAssertTrue(task.tags.isEmpty)
-        XCTAssertNil(task.description)
         XCTAssertNil(task.notes)
     }
 

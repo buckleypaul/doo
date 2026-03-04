@@ -29,7 +29,7 @@ struct TaskListCommand: ParsableCommand {
     @Flag(name: .long, help: "Show only overdue tasks")
     var overdue = false
 
-    @Option(name: .long, help: "Search text (title, description, notes, tags)")
+    @Option(name: .long, help: "Search text (title, notes, tags)")
     var search: String?
 
     @Option(name: .long, help: "Sort order: priority, newest, oldest, due, alpha, completed")

@@ -35,7 +35,6 @@ final class TaskEditTests: XCTestCase {
         addTags: [String] = [],
         removeTags: [String] = [],
         due: String? = nil,
-        description: String? = nil,
         notes: String? = nil,
         status: String? = nil
     ) throws {
@@ -55,9 +54,6 @@ final class TaskEditTests: XCTestCase {
         }
         if let d = due {
             task.dueDate = d.lowercased() == "none" ? nil : DueDateParser.parse(d)
-        }
-        if let desc = description {
-            task.description = desc.lowercased() == "none" ? nil : desc
         }
         if let n = notes {
             task.notes = n.lowercased() == "none" ? nil : n
@@ -135,20 +131,6 @@ final class TaskEditTests: XCTestCase {
         try makeStore().addTask(task)
         try editTask(id: "1", due: "NONE")
         XCTAssertNil(makeStore().loadActiveTasks()[0].dueDate)
-    }
-
-    func testSetDescription() throws {
-        try makeStore().addTask(DooTask(title: "Task"))
-        try editTask(id: "1", description: "New description")
-        XCTAssertEqual(makeStore().loadActiveTasks()[0].description, "New description")
-    }
-
-    func testClearDescriptionWithNone() throws {
-        var task = DooTask(title: "Task")
-        task.description = "Old description"
-        try makeStore().addTask(task)
-        try editTask(id: "1", description: "none")
-        XCTAssertNil(makeStore().loadActiveTasks()[0].description)
     }
 
     func testSetNotes() throws {

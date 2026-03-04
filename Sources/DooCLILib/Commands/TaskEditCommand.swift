@@ -26,9 +26,6 @@ struct TaskEditCommand: ParsableCommand {
     @Option(name: .long, help: "Set due date (today, tomorrow, yyyy-MM-dd, or 'none' to clear)")
     var due: String?
 
-    @Option(name: .long, help: "Set description (or 'none' to clear)")
-    var description: String?
-
     @Option(name: .long, help: "Set notes (or 'none' to clear)")
     var notes: String?
 
@@ -56,9 +53,6 @@ struct TaskEditCommand: ParsableCommand {
         }
         if let d = due {
             task.dueDate = d.lowercased() == "none" ? nil : DueDateParser.parse(d)
-        }
-        if let desc = description {
-            task.description = desc.lowercased() == "none" ? nil : desc
         }
         if let n = notes {
             task.notes = n.lowercased() == "none" ? nil : n

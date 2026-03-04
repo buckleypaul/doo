@@ -33,7 +33,7 @@ final class TaskAddTests: XCTestCase {
         priority: Int? = nil,
         tags: [String] = [],
         due: String? = nil,
-        description: String? = nil,
+        notes: String? = nil,
         status: String? = nil
     ) throws {
         var task = InlineSyntaxParser.parse(input)
@@ -45,7 +45,7 @@ final class TaskAddTests: XCTestCase {
             task.tags = Array(Set(task.tags + tags)).sorted()
         }
         if let d = due { task.dueDate = DueDateParser.parse(d) }
-        if let desc = description { task.description = desc }
+        if let n = notes { task.notes = n }
         if let s = status {
             guard let parsed = PipelineStatus.fromShorthand(s) else {
                 throw CLIError.invalidStatus(s)
@@ -115,14 +115,14 @@ final class TaskAddTests: XCTestCase {
         XCTAssertEqual(task.dueDate, expected)
     }
 
-    func testFlagDescriptionOverridesInlineDescription() throws {
-        try addTask(input: "Task /inline desc", description: "flag desc")
-        XCTAssertEqual(makeStore().loadActiveTasks()[0].description, "flag desc")
+    func testFlagNotesOverridesInlineNotes() throws {
+        try addTask(input: "Task /inline notes", notes: "flag notes")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].notes, "flag notes")
     }
 
-    func testAddWithInlineDescription() throws {
-        try addTask(input: "Task /this is the description")
-        XCTAssertEqual(makeStore().loadActiveTasks()[0].description, "this is the description")
+    func testAddWithInlineNotes() throws {
+        try addTask(input: "Task /this is the notes")
+        XCTAssertEqual(makeStore().loadActiveTasks()[0].notes, "this is the notes")
     }
 
     func testDefaultPriorityIsTwo() throws {

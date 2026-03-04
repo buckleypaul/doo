@@ -76,10 +76,6 @@ public enum TableFormatter {
             lines.append("Completed:   \(DateFormatting.shortDateTime(completed))")
         }
 
-        if let description = task.description, !description.isEmpty {
-            lines.append("Description: \(description)")
-        }
-
         if let notes = task.notes, !notes.isEmpty {
             lines.append("Notes:       \(notes)")
         }

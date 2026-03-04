@@ -45,7 +45,6 @@ extension FilterState {
             let query = searchText.lowercased()
             result = result.filter { task in
                 task.title.lowercased().contains(query)
-                || (task.description?.lowercased().contains(query) ?? false)
                 || (task.notes?.lowercased().contains(query) ?? false)
                 || task.tags.contains { $0.lowercased().contains(query) }
             }

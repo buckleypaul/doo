@@ -3,7 +3,6 @@ import Foundation
 public struct DooTask: Codable, Identifiable, Equatable, Sendable {
     public var id: UUID
     public var title: String
-    public var description: String?
     public var notes: String?
     public var priority: Int
     public var tags: [String]
@@ -14,7 +13,6 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
     public init(
         id: UUID = UUID(),
         title: String,
-        description: String? = nil,
         notes: String? = nil,
         priority: Int = 2,
         tags: [String] = [],
@@ -25,7 +23,6 @@ public struct DooTask: Codable, Identifiable, Equatable, Sendable {
     ) {
         self.id = id
         self.title = title
-        self.description = description
         self.notes = notes
         self.priority = priority
         self.tags = tags
@@ -47,7 +44,7 @@ public struct TaskFile: Codable, Sendable {
 extension DooTask {
     /// Custom date coding: dueDate uses yyyy-MM-dd, dateAdded/dateCompleted use ISO8601 with seconds
     enum CodingKeys: String, CodingKey {
-        case id, title, description, notes, priority, tags
+        case id, title, notes, priority, tags
         case dueDate, dateAdded, dateCompleted, status
     }
 
@@ -55,7 +52,6 @@ extension DooTask {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
-        description = try container.decodeIfPresent(String.self, forKey: .description)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
         let rawPriority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 2
         priority = min(max(0, rawPriority), 2)   // migrate old values (3-5 → 2)
@@ -81,7 +77,6 @@ extension DooTask {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
         try container.encode(title, forKey: .title)
-        try container.encodeIfPresent(description, forKey: .description)
         try container.encodeIfPresent(notes, forKey: .notes)
         try container.encode(priority, forKey: .priority)
         try container.encode(tags, forKey: .tags)

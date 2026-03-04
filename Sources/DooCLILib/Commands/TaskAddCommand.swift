@@ -8,7 +8,7 @@ struct TaskAddCommand: ParsableCommand {
         abstract: "Add a new task"
     )
 
-    @Argument(help: "Task title (supports inline syntax: \"title !N #tag @date /description\")")
+    @Argument(help: "Task title (supports inline syntax: \"title !N #tag @date /notes\")")
     var input: String
 
     @Option(name: .long, help: "Priority (0-2)")
@@ -20,8 +20,8 @@ struct TaskAddCommand: ParsableCommand {
     @Option(name: .long, help: "Due date (today, tomorrow, or yyyy-MM-dd)")
     var due: String?
 
-    @Option(name: .long, help: "Description text")
-    var description: String?
+    @Option(name: .long, help: "Notes text")
+    var notes: String?
 
     @Option(name: .long, help: "Pipeline status (triage, backlog, inprogress, inreview)")
     var status: String?
@@ -42,8 +42,8 @@ struct TaskAddCommand: ParsableCommand {
         if let d = due {
             task.dueDate = DueDateParser.parse(d)
         }
-        if let desc = description {
-            task.description = desc
+        if let n = notes {
+            task.notes = n
         }
         if let s = status {
             guard let parsed = PipelineStatus.fromShorthand(s) else {

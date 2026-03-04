@@ -1,22 +1,25 @@
 import AppKit
 import SwiftUI
 
+private struct RowKey: Hashable {
+    let sectionID: UUID
+    let taskID: DooTask.ID
+}
+
 struct SectionedTaskListView: View {
     @Bindable var store: TaskStore
     @Bindable var settings: SettingsManager
     @State private var newTaskInput = ""
     @FocusState private var isInputFocused: Bool
     @State private var selectedTaskID: DooTask.ID?
-    @State private var showDetail = true
-    @State private var savedDetailWidth: CGFloat = 320
-    @State private var dragStartWidth: CGFloat? = nil
+    @State private var expandedTaskIDs: Set<DooTask.ID> = []
     @State private var editorSectionID: UUID?
-    @State private var tagPopoverTaskID: DooTask.ID?
-    @State private var statusPopoverTaskID: DooTask.ID?
-    @State private var priorityPopoverTaskID: DooTask.ID?
-    @State private var dueDatePopoverTaskID: DooTask.ID?
-    @State private var hoveredTaskID: DooTask.ID?
-    @State private var editingTitleTaskID: DooTask.ID?
+    @State private var tagPopoverKey: RowKey?
+    @State private var statusPopoverKey: RowKey?
+    @State private var priorityPopoverKey: RowKey?
+    @State private var dueDatePopoverKey: RowKey?
+    @State private var hoveredRowKey: RowKey?
+    @State private var editingTitleKey: RowKey?
     @State private var editingTitleText: String = ""
     @FocusState private var focusedTitleTaskID: DooTask.ID?
 
@@ -29,6 +32,7 @@ struct SectionedTaskListView: View {
 
     private let checkWidth: CGFloat = 28
     private let deleteWidth: CGFloat = 40
+    private let chevronWidth: CGFloat = 20
 
     private var sortedSections: [TaskSection] {
         settings.sections.sorted { $0.order < $1.order }
@@ -39,53 +43,26 @@ struct SectionedTaskListView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            VStack(spacing: 0) {
-                InlineAddRow(input: $newTaskInput, isFocused: $isInputFocused) {
-                    submitNewTask()
-                }
-                Divider()
-                sectionContent
+        VStack(spacing: 0) {
+            InlineAddRow(input: $newTaskInput, isFocused: $isInputFocused) {
+                submitNewTask()
             }
-            .frame(minWidth: 300, maxWidth: .infinity)
-            .onChange(of: focusedTitleTaskID) { oldValue, newValue in
-                if let taskID = oldValue, newValue == nil {
-                    saveTitleEdit(taskID: taskID)
-                }
-            }
-
-            if showDetail {
-                DooStyle.separator
-                    .frame(width: 1)
-                    .frame(width: 9)
-                    .contentShape(Rectangle())
-                    .onHover { hovering in
-                        if hovering { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
-                    }
-                    .gesture(
-                        DragGesture(minimumDistance: 0, coordinateSpace: .global)
-                            .onChanged { value in
-                                if dragStartWidth == nil { dragStartWidth = savedDetailWidth }
-                                savedDetailWidth = max(220, min(700, (dragStartWidth ?? savedDetailWidth) - value.translation.width))
-                            }
-                            .onEnded { _ in dragStartWidth = nil }
-                    )
-
-                detailPanel
-                    .frame(width: savedDetailWidth)
-            }
+            Divider()
+            sectionContent
         }
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Button { showDetail.toggle() } label: {
-                    Image(systemName: "sidebar.right")
-                }
-                .help("Toggle Detail Panel")
+        .frame(minWidth: 300, maxWidth: .infinity)
+        .onChange(of: focusedTitleTaskID) { oldValue, newValue in
+            if let taskID = oldValue, newValue == nil {
+                saveTitleEdit(taskID: taskID)
+                editingTitleKey = nil
             }
         }
         .onChange(of: store.activeTasks) { _, tasks in
             if let id = selectedTaskID, !tasks.contains(where: { $0.id == id }) {
                 selectedTaskID = nil
+            }
+            expandedTaskIDs = expandedTaskIDs.filter { id in
+                tasks.contains(where: { $0.id == id })
             }
         }
     }
@@ -94,6 +71,7 @@ struct SectionedTaskListView: View {
 
     private func sectionColumnHeader(_ section: TaskSection) -> some View {
         HStack(spacing: 0) {
+            Spacer().frame(width: chevronWidth)
             Spacer().frame(width: checkWidth)
             sortHeaderButton("Title", column: "title", section: section)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,23 +116,6 @@ struct SectionedTaskListView: View {
             }
         }
         .buttonStyle(.plain)
-    }
-
-    // MARK: - Detail panel
-
-    @ViewBuilder
-    private var detailPanel: some View {
-        VStack(spacing: 0) {
-            if let id = selectedTaskID,
-               let index = store.activeTasks.firstIndex(where: { $0.id == id }) {
-                TaskDetailView(store: store, task: $store.activeTasks[index])
-            } else {
-                Text("Select a task")
-                    .foregroundStyle(DooStyle.textSecondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .background(DooStyle.surface)
     }
 
     // MARK: - Section content
@@ -293,7 +254,7 @@ struct SectionedTaskListView: View {
                         .padding(.vertical, DooStyle.Spacing.sm)
                 } else {
                     ForEach(tasks) { task in
-                        taskRow(task)
+                        taskRow(task, section: section)
                     }
                 }
             }
@@ -304,162 +265,194 @@ struct SectionedTaskListView: View {
 
     // MARK: - Task row (tabular)
 
-    private func taskRow(_ task: DooTask) -> some View {
+    private func taskRow(_ task: DooTask, section: TaskSection) -> some View {
+        let key = RowKey(sectionID: section.id, taskID: task.id)
         let isSelected = selectedTaskID == task.id
-        let isHovered = hoveredTaskID == task.id
-        return HStack(spacing: 0) {
-            // Check
-            CompleteButtonCell(isCompleted: false) {
-                store.completeTask(task)
-            }
-            .frame(width: checkWidth, alignment: .center)
-
-            // Title (flexible) — click to edit inline
-            if editingTitleTaskID == task.id {
-                TextField("Title", text: $editingTitleText, axis: .vertical)
-                    .lineLimit(1...8)
-                    .textFieldStyle(.plain)
-                    .focused($focusedTitleTaskID, equals: task.id)
-                    .onSubmit { saveTitleEdit(taskID: task.id) }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                Text(task.title)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .onTapGesture {
-                        if let prev = editingTitleTaskID, prev != task.id {
-                            saveTitleEdit(taskID: prev)
-                        }
-                        selectedTaskID = task.id
-                        editingTitleTaskID = task.id
-                        editingTitleText = task.title
-                        focusedTitleTaskID = task.id
-                    }
-            }
-
-            Spacer().frame(width: 7) // match header divider width
-
-            // Status
-            Button {
-                statusPopoverTaskID = task.id
-            } label: {
-                Text(task.status.displayName)
-                    .font(.caption)
-                    .foregroundStyle(DooStyle.textSecondary)
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: Binding(
-                get: { statusPopoverTaskID == task.id },
-                set: { if !$0 { statusPopoverTaskID = nil } }
-            )) {
-                InlineStatusEditor(task: task, store: store)
-            }
-            .frame(width: statusWidth, alignment: .leading)
-
-            Spacer().frame(width: 7)
-
-            // Priority
-            Button {
-                priorityPopoverTaskID = task.id
-            } label: {
-                PriorityBadge(priority: task.priority)
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: Binding(
-                get: { priorityPopoverTaskID == task.id },
-                set: { if !$0 { priorityPopoverTaskID = nil } }
-            )) {
-                InlinePriorityEditor(task: task, store: store)
-            }
-            .frame(width: priorityWidth, alignment: .center)
-
-            Spacer().frame(width: 7)
-
-            // Tags
-            HStack(spacing: 2) {
-                ForEach(task.tags.prefix(2), id: \.self) { tag in
-                    Text(tag)
-                        .font(.caption)
-                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
-                        .padding(.vertical, DooStyle.Spacing.xs)
-                        .background(DooStyle.tagBg)
-                        .clipShape(Capsule())
-                }
+        let isHovered = hoveredRowKey?.taskID == task.id
+        let isExpanded = expandedTaskIDs.contains(task.id)
+        return VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                // Chevron
                 Button {
-                    tagPopoverTaskID = task.id
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        if isExpanded {
+                            expandedTaskIDs.remove(task.id)
+                        } else {
+                            expandedTaskIDs.insert(task.id)
+                        }
+                    }
                 } label: {
-                    Text("+ tag")
+                    Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundStyle(DooStyle.textTertiary)
-                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
-                        .padding(.vertical, DooStyle.Spacing.xs)
-                        .background(DooStyle.tagBg.opacity(0.5))
-                        .clipShape(Capsule())
+                        .foregroundStyle(DooStyle.textSecondary)
+                        .rotationEffect(isExpanded ? .degrees(90) : .zero)
+                        .animation(.easeInOut(duration: 0.15), value: isExpanded)
+                }
+                .buttonStyle(.plain)
+                .frame(width: chevronWidth, alignment: .center)
+
+                // Check
+                CompleteButtonCell(isCompleted: false) {
+                    store.completeTask(task)
+                }
+                .frame(width: checkWidth, alignment: .center)
+
+                // Title (flexible) — click to edit inline
+                if editingTitleKey == key {
+                    TextField("Title", text: $editingTitleText, axis: .vertical)
+                        .lineLimit(1...8)
+                        .textFieldStyle(.plain)
+                        .focused($focusedTitleTaskID, equals: task.id)
+                        .onSubmit { saveTitleEdit(taskID: task.id) }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text(task.title)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .onTapGesture {
+                            if let prevKey = editingTitleKey, prevKey != key {
+                                saveTitleEdit(taskID: prevKey.taskID)
+                            }
+                            selectedTaskID = task.id
+                            editingTitleKey = key
+                            editingTitleText = task.title
+                            focusedTitleTaskID = task.id
+                        }
+                }
+
+                Spacer().frame(width: 7) // match header divider width
+
+                // Status
+                Button {
+                    statusPopoverKey = key
+                } label: {
+                    Text(task.status.displayName)
+                        .font(.caption)
+                        .foregroundStyle(DooStyle.textSecondary)
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: Binding(
-                    get: { tagPopoverTaskID == task.id },
-                    set: { if !$0 { tagPopoverTaskID = nil } }
+                    get: { statusPopoverKey == key },
+                    set: { if !$0 { statusPopoverKey = nil } }
                 )) {
-                    InlineTagEditor(task: task, store: store)
+                    InlineStatusEditor(task: task, store: store)
                 }
-            }
-            .frame(width: tagsWidth, alignment: .leading)
-            .clipped()
+                .frame(width: statusWidth, alignment: .leading)
 
-            Spacer().frame(width: 7)
+                Spacer().frame(width: 7)
 
-            // Due date
-            Button {
-                dueDatePopoverTaskID = task.id
-            } label: {
-                if let due = task.dueDate {
-                    Text(DateFormatting.dateOnly(due))
-                        .font(.caption)
-                        .foregroundStyle(DateFormatting.isOverdue(due) ? DooStyle.colorRed : DooStyle.textSecondary)
-                } else {
-                    Text("+ date")
-                        .font(.caption)
-                        .foregroundStyle(DooStyle.textTertiary)
-                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
-                        .padding(.vertical, DooStyle.Spacing.xs)
-                        .background(DooStyle.tagBg.opacity(0.5))
-                        .clipShape(Capsule())
+                // Priority
+                Button {
+                    priorityPopoverKey = key
+                } label: {
+                    PriorityBadge(priority: task.priority)
                 }
+                .buttonStyle(.plain)
+                .popover(isPresented: Binding(
+                    get: { priorityPopoverKey == key },
+                    set: { if !$0 { priorityPopoverKey = nil } }
+                )) {
+                    InlinePriorityEditor(task: task, store: store)
+                }
+                .frame(width: priorityWidth, alignment: .center)
+
+                Spacer().frame(width: 7)
+
+                // Tags
+                HStack(spacing: 2) {
+                    ForEach(task.tags.prefix(2), id: \.self) { tag in
+                        Text(tag)
+                            .font(.caption)
+                            .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                            .padding(.vertical, DooStyle.Spacing.xs)
+                            .background(DooStyle.tagBg)
+                            .clipShape(Capsule())
+                    }
+                    Button {
+                        tagPopoverKey = key
+                    } label: {
+                        Text("+ tag")
+                            .font(.caption)
+                            .foregroundStyle(DooStyle.textTertiary)
+                            .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                            .padding(.vertical, DooStyle.Spacing.xs)
+                            .background(DooStyle.tagBg.opacity(0.5))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: Binding(
+                        get: { tagPopoverKey == key },
+                        set: { if !$0 { tagPopoverKey = nil } }
+                    )) {
+                        InlineTagEditor(task: task, store: store)
+                    }
+                }
+                .frame(width: tagsWidth, alignment: .leading)
+                .clipped()
+
+                Spacer().frame(width: 7)
+
+                // Due date
+                Button {
+                    dueDatePopoverKey = key
+                } label: {
+                    if let due = task.dueDate {
+                        Text(DateFormatting.dateOnly(due))
+                            .font(.caption)
+                            .foregroundStyle(DateFormatting.isOverdue(due) ? DooStyle.colorRed : DooStyle.textSecondary)
+                    } else {
+                        Text("+ date")
+                            .font(.caption)
+                            .foregroundStyle(DooStyle.textTertiary)
+                            .padding(.horizontal, DooStyle.Spacing.sm - 2)
+                            .padding(.vertical, DooStyle.Spacing.xs)
+                            .background(DooStyle.tagBg.opacity(0.5))
+                            .clipShape(Capsule())
+                    }
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: Binding(
+                    get: { dueDatePopoverKey == key },
+                    set: { if !$0 { dueDatePopoverKey = nil } }
+                )) {
+                    InlineDueDateEditor(task: task, store: store)
+                }
+                .frame(width: dueWidth, alignment: .leading)
+
+                Spacer().frame(width: 7)
+
+                // Added date
+                Text(DateFormatting.relative(task.dateAdded))
+                    .font(.caption)
+                    .foregroundStyle(DooStyle.textSecondary)
+                    .frame(width: addedWidth, alignment: .leading)
+
+                // Delete
+                DeleteButtonCell(
+                    onDelete: { withAnimation { store.deleteTask(task) } }
+                )
+                .frame(width: deleteWidth, alignment: .center)
             }
-            .buttonStyle(.plain)
-            .popover(isPresented: Binding(
-                get: { dueDatePopoverTaskID == task.id },
-                set: { if !$0 { dueDatePopoverTaskID = nil } }
-            )) {
-                InlineDueDateEditor(task: task, store: store)
-            }
-            .frame(width: dueWidth, alignment: .leading)
-
-            Spacer().frame(width: 7)
-
-            // Added date
-            Text(DateFormatting.relative(task.dateAdded))
-                .font(.caption)
-                .foregroundStyle(DooStyle.textSecondary)
-                .frame(width: addedWidth, alignment: .leading)
-
-            // Delete
-            DeleteButtonCell(
-                onDelete: { withAnimation { store.deleteTask(task) } }
+            .padding(.horizontal, DooStyle.Spacing.md)
+            .padding(.vertical, DooStyle.Spacing.xs)
+            .background(
+                RoundedRectangle(cornerRadius: DooStyle.Radius.card)
+                    .fill(isSelected ? DooStyle.accent.opacity(0.1) : isHovered ? DooStyle.tagBg.opacity(0.6) : .clear)
             )
-            .frame(width: deleteWidth, alignment: .center)
+            .contentShape(Rectangle())
+            .onTapGesture { selectedTaskID = task.id }
+            .onHover { hovering in hoveredRowKey = hovering ? key : nil }
+            .contextMenu { taskContextMenu(task) }
+
+            // Inline expansion
+            if isExpanded,
+               let index = store.activeTasks.firstIndex(where: { $0.id == task.id }) {
+                InlineTaskDetail(store: store, task: $store.activeTasks[index])
+                    .padding(.leading, DooStyle.Spacing.md + chevronWidth + checkWidth)
+                    .padding(.trailing, DooStyle.Spacing.md + deleteWidth)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
-        .padding(.horizontal, DooStyle.Spacing.md)
-        .padding(.vertical, DooStyle.Spacing.xs)
-        .background(
-            RoundedRectangle(cornerRadius: DooStyle.Radius.card)
-                .fill(isSelected ? DooStyle.accent.opacity(0.1) : isHovered ? DooStyle.tagBg.opacity(0.6) : .clear)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture { selectedTaskID = task.id }
-        .onHover { hovering in hoveredTaskID = hovering ? task.id : nil }
-        .contextMenu { taskContextMenu(task) }
     }
 
     @ViewBuilder
@@ -544,7 +537,7 @@ struct SectionedTaskListView: View {
         let text = editingTitleText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty,
               let index = store.activeTasks.firstIndex(where: { $0.id == taskID }) else {
-            editingTitleTaskID = nil
+            editingTitleKey = nil
             return
         }
         var updated = store.activeTasks[index]
@@ -552,7 +545,7 @@ struct SectionedTaskListView: View {
             updated.title = text
             store.updateTask(updated)
         }
-        editingTitleTaskID = nil
+        editingTitleKey = nil
     }
 }
 
@@ -580,5 +573,28 @@ private struct ColumnResizeHandle: View {
                     }
                     .onEnded { _ in startWidth = nil }
             )
+    }
+}
+
+// MARK: - Inline task detail
+
+private struct InlineTaskDetail: View {
+    @Bindable var store: TaskStore
+    @Binding var task: DooTask
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DooStyle.Spacing.sm) {
+            TextEditor(text: Binding(
+                get: { task.notes ?? "" },
+                set: { task.notes = $0.isEmpty ? nil : $0 }
+            ))
+            .frame(minHeight: 60)
+            .font(.callout)
+            .scrollDisabled(true)
+        }
+        .padding(.vertical, DooStyle.Spacing.sm)
+        .onChange(of: task) { _, newValue in
+            store.updateTask(newValue)
+        }
     }
 }

@@ -17,7 +17,6 @@ func iso8601(_ string: String) -> Date {
 func sampleTask(
     id: UUID = UUID(),
     title: String = "Test Task",
-    description: String? = nil,
     notes: String? = nil,
     priority: Int = 2,
     tags: [String] = [],
@@ -29,7 +28,6 @@ func sampleTask(
     DooTask(
         id: id,
         title: title,
-        description: description,
         notes: notes,
         priority: priority,
         tags: tags,
