@@ -29,4 +29,8 @@ public enum DateFormatting {
     public static func isOverdue(_ date: Date) -> Bool {
         Calendar.current.startOfDay(for: date) < Calendar.current.startOfDay(for: Date())
     }
+
+    public static func isDueTodayOrOverdue(_ date: Date) -> Bool {
+        Calendar.current.startOfDay(for: date) <= Calendar.current.startOfDay(for: Date())
+    }
 }

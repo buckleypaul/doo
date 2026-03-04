@@ -37,4 +37,19 @@ final class DateFormattingTests: XCTestCase {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
         XCTAssertFalse(DateFormatting.isOverdue(tomorrow))
     }
+
+    func testIsDueTodayOrOverduePastDate() {
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        XCTAssertTrue(DateFormatting.isDueTodayOrOverdue(yesterday))
+    }
+
+    func testIsDueTodayOrOverdueToday() {
+        let today = Calendar.current.startOfDay(for: Date())
+        XCTAssertTrue(DateFormatting.isDueTodayOrOverdue(today))
+    }
+
+    func testIsDueTodayOrOverdueFutureDate() {
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        XCTAssertFalse(DateFormatting.isDueTodayOrOverdue(tomorrow))
+    }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 public enum SidebarItem: String, CaseIterable, Identifiable {
     case todo = "Todo"
     case done = "Done"
+    case today = "Today"
     case settings = "Settings"
 
     public var id: String { rawValue }
@@ -11,6 +12,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable {
         switch self {
         case .todo: "checklist"
         case .done: "checkmark.circle"
+        case .today: "sun.max"
         case .settings: "gear"
         }
     }
@@ -49,6 +51,9 @@ public struct ContentView: View {
             case .done:
                 DoneListView(store: store)
                     .navigationTitle("Done")
+            case .today:
+                TodayView(store: store)
+                    .navigationTitle("Today")
             case .settings:
                 SettingsView()
                     .navigationTitle("Settings")
@@ -69,7 +74,18 @@ public struct ContentView: View {
         switch item {
         case .todo: store.activeTasks.count
         case .done: store.completedTasks.count
+        case .today: todayBadgeCount
         case .settings: 0
         }
+    }
+
+    private var todayBadgeCount: Int {
+        let followupIDs = Set(store.activeTasks
+            .filter { $0.tags.contains("followup") }
+            .map(\.id))
+        let inProgressTodayIDs = Set(store.activeTasks
+            .filter { $0.status == .inProgress && $0.dueDate.map(DateFormatting.isDueTodayOrOverdue) == true }
+            .map(\.id))
+        return followupIDs.union(inProgressTodayIDs).count
     }
 }
