@@ -6,19 +6,25 @@ public struct SettingsConfig: Codable, Sendable {
     public var hotkeyEnabled: Bool
     public var launchAtLogin: Bool
     public var sections: [TaskSection]
+    public var tagColors: [String: String]
+    public var availableTagColors: [TagColor]
 
     public init(
         todoFilePath: String,
         doneFilePath: String,
         hotkeyEnabled: Bool = true,
         launchAtLogin: Bool = false,
-        sections: [TaskSection] = [.defaultSection]
+        sections: [TaskSection] = [.defaultSection],
+        tagColors: [String: String] = [:],
+        availableTagColors: [TagColor] = TagColor.defaultPalette()
     ) {
         self.todoFilePath = todoFilePath
         self.doneFilePath = doneFilePath
         self.hotkeyEnabled = hotkeyEnabled
         self.launchAtLogin = launchAtLogin
         self.sections = sections
+        self.tagColors = tagColors
+        self.availableTagColors = availableTagColors
     }
 
     public init(from decoder: Decoder) throws {
@@ -28,6 +34,8 @@ public struct SettingsConfig: Codable, Sendable {
         hotkeyEnabled = try container.decodeIfPresent(Bool.self, forKey: .hotkeyEnabled) ?? true
         launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         sections = try container.decodeIfPresent([TaskSection].self, forKey: .sections) ?? [.defaultSection]
+        tagColors = try container.decodeIfPresent([String: String].self, forKey: .tagColors) ?? [:]
+        availableTagColors = try container.decodeIfPresent([TagColor].self, forKey: .availableTagColors) ?? TagColor.defaultPalette()
     }
 }
 

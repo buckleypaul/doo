@@ -32,6 +32,14 @@ public class SettingsManager {
         didSet { saveConfig() }
     }
 
+    public var tagColors: [String: String] {
+        didSet { saveConfig() }
+    }
+
+    public var availableTagColors: [TagColor] {
+        didSet { saveConfig() }
+    }
+
     // MARK: - Private
 
     private let configURL: URL
@@ -55,6 +63,8 @@ public class SettingsManager {
         self.hotkeyEnabled = config.hotkeyEnabled
         self.launchAtLogin = config.launchAtLogin
         self.sections = config.sections
+        self.tagColors = config.tagColors
+        self.availableTagColors = config.availableTagColors
     }
 
     // MARK: - Section helpers
@@ -91,7 +101,9 @@ public class SettingsManager {
             doneFilePath: doneFilePath,
             hotkeyEnabled: hotkeyEnabled,
             launchAtLogin: launchAtLogin,
-            sections: sections
+            sections: sections,
+            tagColors: tagColors,
+            availableTagColors: availableTagColors
         )
         do {
             let dir = configURL.deletingLastPathComponent()

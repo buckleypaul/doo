@@ -42,6 +42,38 @@ enum DooStyle {
         }
     }
 
+    // MARK: - Tag color helpers
+
+    /// Returns a Color from a hex string like "#f4dbd6" or "f4dbd6".
+    static func color(fromHex hex: String) -> Color? {
+        let h = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        guard h.count == 6, let rgb = UInt64(h, radix: 16) else { return nil }
+        let r = Double((rgb >> 16) & 0xFF) / 255.0
+        let g = Double((rgb >>  8) & 0xFF) / 255.0
+        let b = Double( rgb        & 0xFF) / 255.0
+        return Color(red: r, green: g, blue: b)
+    }
+
+    /// Returns the assigned color for a tag, or nil if none assigned.
+    @MainActor
+    static func tagColor(for tag: String, settings: SettingsManager) -> Color? {
+        guard let hex = settings.tagColors[tag] else { return nil }
+        return color(fromHex: hex)
+    }
+
+    /// Returns black or white for maximum contrast against the given hex background.
+    static func contrastColor(for hex: String) -> Color {
+        let h = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        guard h.count == 6, let rgb = UInt64(h, radix: 16) else { return .black }
+        let r = Double((rgb >> 16) & 0xFF) / 255.0
+        let g = Double((rgb >>  8) & 0xFF) / 255.0
+        let b = Double( rgb        & 0xFF) / 255.0
+        // sRGB luminance
+        func linearize(_ c: Double) -> Double { c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }
+        let luminance = 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
+        return luminance > 0.179 ? .black : .white
+    }
+
     enum Spacing {
         static let xs: CGFloat = 4
         static let sm: CGFloat = 8
