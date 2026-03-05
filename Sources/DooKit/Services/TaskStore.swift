@@ -67,6 +67,50 @@ public class TaskStore {
         }
     }
 
+    // MARK: - Tag management
+
+    public func renameTags(from oldTag: String, to newTag: String) {
+        for (index, task) in activeTasks.enumerated() {
+            if task.tags.contains(oldTag) {
+                activeTasks[index].tags.removeAll { $0 == oldTag }
+                if !activeTasks[index].tags.contains(newTag) {
+                    activeTasks[index].tags.append(newTag)
+                }
+            }
+        }
+        for (index, task) in completedTasks.enumerated() {
+            if task.tags.contains(oldTag) {
+                completedTasks[index].tags.removeAll { $0 == oldTag }
+                if !completedTasks[index].tags.contains(newTag) {
+                    completedTasks[index].tags.append(newTag)
+                }
+            }
+        }
+        saveTodoFile()
+        saveDoneFile()
+    }
+
+    public func mergeTags(source: String, into target: String) {
+        for (index, task) in activeTasks.enumerated() {
+            if task.tags.contains(source) {
+                activeTasks[index].tags.removeAll { $0 == source }
+                if !activeTasks[index].tags.contains(target) {
+                    activeTasks[index].tags.append(target)
+                }
+            }
+        }
+        for (index, task) in completedTasks.enumerated() {
+            if task.tags.contains(source) {
+                completedTasks[index].tags.removeAll { $0 == source }
+                if !completedTasks[index].tags.contains(target) {
+                    completedTasks[index].tags.append(target)
+                }
+            }
+        }
+        saveTodoFile()
+        saveDoneFile()
+    }
+
     // MARK: - File Path Updates
 
     public func updatePaths(todoPath: String, donePath: String) {

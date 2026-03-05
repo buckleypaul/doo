@@ -4,6 +4,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable {
     case todo = "Todo"
     case done = "Done"
     case today = "Today"
+    case tags = "Tags"
     case settings = "Settings"
 
     public var id: String { rawValue }
@@ -13,6 +14,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable {
         case .todo: "checklist"
         case .done: "checkmark.circle"
         case .today: "sun.max"
+        case .tags: "tag"
         case .settings: "gear"
         }
     }
@@ -54,6 +56,9 @@ public struct ContentView: View {
             case .today:
                 TodayView(store: store, settings: settings)
                     .navigationTitle("Today")
+            case .tags:
+                TagsView(store: store, settings: settings)
+                    .navigationTitle("Tags")
             case .settings:
                 SettingsView()
                     .navigationTitle("Settings")
@@ -75,6 +80,7 @@ public struct ContentView: View {
         case .todo: store.activeTasks.count
         case .done: store.completedTasks.count
         case .today: todayBadgeCount
+        case .tags: Set(store.activeTasks.flatMap(\.tags)).count
         case .settings: 0
         }
     }
