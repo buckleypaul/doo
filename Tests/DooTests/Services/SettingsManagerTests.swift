@@ -120,4 +120,44 @@ final class SettingsManagerTests: XCTestCase {
         XCTAssertEqual(manager2.sections.last?.name, "Backlog")
         XCTAssertEqual(manager2.sections.last?.selectedStatuses, Set([.backlog]))
     }
+
+    // MARK: - Tag color tests
+
+    func testTagColorsDefaultEmpty() throws {
+        let manager = SettingsManager(configURL: configURL)
+        XCTAssertTrue(manager.tagColors.isEmpty)
+    }
+
+    func testTagColorsPersist() throws {
+        do {
+            let manager = SettingsManager(configURL: configURL)
+            manager.tagColors = ["backend": "#ed8796", "frontend": "#a6da95"]
+        }
+        let manager2 = SettingsManager(configURL: configURL)
+        XCTAssertEqual(manager2.tagColors["backend"], "#ed8796")
+        XCTAssertEqual(manager2.tagColors["frontend"], "#a6da95")
+    }
+
+    func testAvailableTagColorsDefaultPalette() throws {
+        let manager = SettingsManager(configURL: configURL)
+        let palette = manager.availableTagColors
+        XCTAssertEqual(palette.count, 14)
+        XCTAssertEqual(palette.first?.name, "Rosewater")
+        XCTAssertEqual(palette.first?.hex, "#f4dbd6")
+    }
+
+    func testAvailableTagColorsPersist() throws {
+        do {
+            let manager = SettingsManager(configURL: configURL)
+            let customColors = [
+                TagColor(name: "CustomRed", hex: "#ff0000"),
+                TagColor(name: "CustomBlue", hex: "#0000ff")
+            ]
+            manager.availableTagColors = customColors
+        }
+        let manager2 = SettingsManager(configURL: configURL)
+        XCTAssertEqual(manager2.availableTagColors.count, 2)
+        XCTAssertEqual(manager2.availableTagColors[0].name, "CustomRed")
+        XCTAssertEqual(manager2.availableTagColors[1].hex, "#0000ff")
+    }
 }

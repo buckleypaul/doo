@@ -170,6 +170,48 @@ final class TaskStoreTests: XCTestCase {
         XCTAssertEqual(stored?.tags, ["backend"])
     }
 
+    func testRenameTags() {
+        let s = makeStore()
+        let task1 = sampleTask(tags: ["backend"])
+        let task2 = sampleTask(tags: ["backend", "frontend"])
+        let task3 = sampleTask(tags: ["frontend"])
+        s.addTask(task1)
+        s.addTask(task2)
+        s.addTask(task3)
+
+        s.renameTags(from: "backend", to: "infrastructure")
+
+        XCTAssertEqual(s.activeTasks[2].tags.sorted(), ["infrastructure"])
+        XCTAssertEqual(s.activeTasks[1].tags.sorted(), ["frontend", "infrastructure"])
+        XCTAssertEqual(s.activeTasks[0].tags.sorted(), ["frontend"])
+    }
+
+    func testMergeTags() {
+        let s = makeStore()
+        let task1 = sampleTask(tags: ["old"])
+        let task2 = sampleTask(tags: ["old", "other"])
+        let task3 = sampleTask(tags: ["target"])
+        s.addTask(task1)
+        s.addTask(task2)
+        s.addTask(task3)
+
+        s.mergeTags(source: "old", into: "target")
+
+        XCTAssertEqual(s.activeTasks[2].tags.sorted(), ["target"])
+        XCTAssertEqual(s.activeTasks[1].tags.sorted(), ["other", "target"])
+        XCTAssertEqual(s.activeTasks[0].tags.sorted(), ["target"])
+    }
+
+    func testMergeTagsAvoidsDuplicates() {
+        let s = makeStore()
+        let task = sampleTask(tags: ["source", "target"])
+        s.addTask(task)
+
+        s.mergeTags(source: "source", into: "target")
+
+        XCTAssertEqual(s.activeTasks[0].tags, ["target"])
+    }
+
     func testUpdatePathsReloadsFromNewFiles() throws {
         let s = makeStore()
         s.addTask(sampleTask(title: "Old"))
