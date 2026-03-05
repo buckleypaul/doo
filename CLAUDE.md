@@ -11,7 +11,17 @@ swift run DooCLI                 # dev run (CLI)
 swift test                       # run all tests
 swift test --filter DooTests.InlineSyntaxParserTests  # single suite
 swift test --filter DooCLITests                        # CLI tests only
+./build-app.sh                   # build release + assemble /Applications/Doo.app bundle
 ```
+
+### Login Item setup
+
+macOS Login Items requires a proper `.app` bundle — a plain Unix executable opens in Terminal.
+
+1. Run `./build-app.sh` (builds release binary and assembles the bundle)
+2. **System Settings → General → Login Items**
+3. Remove any existing "Doo" entry pointing to a raw executable
+4. Add `/Applications/Doo.app`
 
 If `xcode-select -p` points to Command Line Tools (not Xcode), prefix with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` or run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` once.
 

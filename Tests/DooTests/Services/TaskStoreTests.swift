@@ -160,6 +160,16 @@ final class TaskStoreTests: XCTestCase {
         XCTAssertEqual(reloaded?.title, newTitle)
     }
 
+    func testRemoveTagViaUpdateTask() {
+        let s = makeStore()
+        var task = sampleTask(tags: ["backend", "frontend"])
+        s.addTask(task)
+        task.tags.removeAll { $0 == "frontend" }
+        s.updateTask(task)
+        let stored = s.activeTasks.first { $0.id == task.id }
+        XCTAssertEqual(stored?.tags, ["backend"])
+    }
+
     func testUpdatePathsReloadsFromNewFiles() throws {
         let s = makeStore()
         s.addTask(sampleTask(title: "Old"))

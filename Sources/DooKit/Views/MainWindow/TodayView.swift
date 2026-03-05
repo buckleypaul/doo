@@ -8,6 +8,7 @@ private struct RowKey: Hashable {
 
 struct TodayView: View {
     @Bindable var store: TaskStore
+    @Bindable var settings: SettingsManager
     @State private var newTaskInput = ""
     @FocusState private var isInputFocused: Bool
     @State private var selectedTaskID: DooTask.ID?
@@ -250,7 +251,7 @@ struct TodayView: View {
     private func taskRow(_ task: DooTask, sectionID: UUID) -> some View {
         let key = RowKey(sectionID: sectionID, taskID: task.id)
         let isSelected = selectedTaskID == task.id
-        let isHovered = hoveredRowKey?.taskID == task.id
+        let isHovered = hoveredRowKey == key
         let isExpanded = expandedTaskIDs.contains(task.id)
         return VStack(spacing: 0) {
             HStack(spacing: 0) {
@@ -339,12 +340,7 @@ struct TodayView: View {
                 // Tags
                 HStack(spacing: 2) {
                     ForEach(task.tags.prefix(2), id: \.self) { tag in
-                        Text(tag)
-                            .font(.caption)
-                            .padding(.horizontal, DooStyle.Spacing.sm - 2)
-                            .padding(.vertical, DooStyle.Spacing.xs)
-                            .background(DooStyle.tagBg)
-                            .clipShape(Capsule())
+                        todayTagPill(tag: tag, task: task, isHovered: isHovered)
                     }
                     Button { tagPopoverKey = key } label: {
                         Text("+ tag")
@@ -360,7 +356,7 @@ struct TodayView: View {
                         get: { tagPopoverKey == key },
                         set: { if !$0 { tagPopoverKey = nil } }
                     )) {
-                        InlineTagEditor(task: task, store: store)
+                        InlineTagEditor(task: task, store: store, settings: settings)
                     }
                 }
                 .frame(width: tagsWidth, alignment: .leading)
@@ -414,7 +410,16 @@ struct TodayView: View {
                     .fill(isSelected ? DooStyle.accent.opacity(0.1) : isHovered ? DooStyle.tagBg.opacity(0.6) : .clear)
             )
             .contentShape(Rectangle())
-            .onTapGesture { selectedTaskID = task.id }
+            .onTapGesture {
+                selectedTaskID = task.id
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    if expandedTaskIDs.contains(task.id) {
+                        expandedTaskIDs.remove(task.id)
+                    } else {
+                        expandedTaskIDs.insert(task.id)
+                    }
+                }
+            }
             .onHover { hovering in hoveredRowKey = hovering ? key : nil }
             .contextMenu { taskContextMenu(task) }
 
@@ -485,6 +490,38 @@ struct TodayView: View {
         }
     }
 
+    private func todayTagPill(tag: String, task: DooTask, isHovered: Bool) -> some View {
+        let tagColor = DooStyle.tagColor(for: tag, settings: settings)
+        let bgColor = tagColor ?? DooStyle.tagBg
+        let textColor = tagColor.flatMap { _ in
+            if let hex = settings.tagColors[tag] {
+                return DooStyle.contrastColor(for: hex)
+            }
+            return nil
+        } ?? DooStyle.textPrimary
+
+        return HStack(spacing: 2) {
+            Text(tag).font(.caption)
+            if isHovered {
+                Button {
+                    var updated = task
+                    updated.tags.removeAll { $0 == tag }
+                    store.updateTask(updated)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, DooStyle.Spacing.sm - 2)
+        .padding(.vertical, DooStyle.Spacing.xs)
+        .background(bgColor)
+        .foregroundStyle(textColor)
+        .clipShape(Capsule())
+    }
+
     private func submitNewTask() {
         let trimmed = newTaskInput.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
@@ -543,8 +580,15 @@ private struct TodayInlineTaskDetail: View {
     @Bindable var store: TaskStore
     @Binding var task: DooTask
 
+    private var extractedURLs: [URL] {
+        guard let notes = task.notes, !notes.isEmpty else { return [] }
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let matches = detector?.matches(in: notes, range: NSRange(notes.startIndex..., in: notes)) ?? []
+        return matches.compactMap { $0.url }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: DooStyle.Spacing.sm) {
+        HStack(alignment: .top, spacing: DooStyle.Spacing.md) {
             TextEditor(text: Binding(
                 get: { task.notes ?? "" },
                 set: { task.notes = $0.isEmpty ? nil : $0 }
@@ -552,10 +596,39 @@ private struct TodayInlineTaskDetail: View {
             .frame(minHeight: 60)
             .font(.callout)
             .scrollDisabled(true)
+
+            if !extractedURLs.isEmpty {
+                TodayResourcesPanel(urls: extractedURLs)
+            }
         }
         .padding(.vertical, DooStyle.Spacing.sm)
         .onChange(of: task) { _, newValue in
             store.updateTask(newValue)
         }
+    }
+}
+
+private struct TodayResourcesPanel: View {
+    let urls: [URL]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DooStyle.Spacing.xs) {
+            Text("Resources")
+                .font(.caption)
+                .foregroundStyle(DooStyle.textSecondary)
+            ForEach(urls, id: \.absoluteString) { url in
+                Button {
+                    NSWorkspace.shared.open(url)
+                } label: {
+                    Text(url.host ?? url.absoluteString)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .foregroundStyle(DooStyle.accent)
+                }
+                .buttonStyle(.plain)
+                .help(url.absoluteString)
+            }
+        }
+        .frame(minWidth: 120, alignment: .topLeading)
     }
 }

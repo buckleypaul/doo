@@ -14,16 +14,17 @@ Doo stores your tasks as plain JSON files on disk — no cloud account, no sync 
 ## Installation
 
 ```bash
-brew install buckleypaul/tap/doo
-```
-
-Or build from source:
-
-```bash
 git clone https://github.com/buckleypaul/doo
 cd doo
-swift build -c release
-cp .build/release/Doo /Applications/Doo
+./build-app.sh
+```
+
+This builds a release binary and assembles a proper `.app` bundle at `/Applications/Doo.app`.
+
+To install the CLI:
+
+```bash
+sudo cp .build/release/DooCLI /usr/local/bin/doo
 ```
 
 ## Running
@@ -34,11 +35,20 @@ Development:
 swift run
 ```
 
-Release build:
+Release build (after running `build-app.sh`):
 
 ```bash
-.build/release/Doo
+open /Applications/Doo.app
 ```
+
+## Login Item setup
+
+To have Doo launch at login without a Terminal window appearing:
+
+1. Run `./build-app.sh` to create `~/Applications/Doo.app`
+2. Open **System Settings → General → Login Items**
+3. Remove any existing "Doo" entry that points to a Unix executable
+4. Click **+** and add `/Applications/Doo.app`
 
 ## Testing
 

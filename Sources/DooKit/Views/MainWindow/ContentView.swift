@@ -52,7 +52,7 @@ public struct ContentView: View {
                 DoneListView(store: store)
                     .navigationTitle("Done")
             case .today:
-                TodayView(store: store)
+                TodayView(store: store, settings: settings)
                     .navigationTitle("Today")
             case .settings:
                 SettingsView()

@@ -4,13 +4,15 @@ struct InlineTagEditor: View {
     @State private var tags: [String]
     let taskID: UUID
     let store: TaskStore
+    let settings: SettingsManager
     @State private var newTag = ""
     @FocusState private var isFieldFocused: Bool
 
-    init(task: DooTask, store: TaskStore) {
+    init(task: DooTask, store: TaskStore, settings: SettingsManager = .shared) {
         self._tags = State(initialValue: task.tags)
         self.taskID = task.id
         self.store = store
+        self.settings = settings
     }
 
     var body: some View {
@@ -18,20 +20,7 @@ struct InlineTagEditor: View {
             if !tags.isEmpty {
                 FlowLayout(spacing: DooStyle.Spacing.xs) {
                     ForEach(tags, id: \.self) { tag in
-                        HStack(spacing: 2) {
-                            Text(tag).font(.caption)
-                            Button {
-                                removeTag(tag)
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.caption2)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .padding(.horizontal, DooStyle.Spacing.sm - 2)
-                        .padding(.vertical, DooStyle.Spacing.xs)
-                        .background(DooStyle.tagBg)
-                        .clipShape(Capsule())
+                        inlineTagPill(tag)
                     }
                 }
             }
@@ -44,6 +33,33 @@ struct InlineTagEditor: View {
         }
         .padding(DooStyle.Spacing.md)
         .onAppear { isFieldFocused = true }
+    }
+
+    private func inlineTagPill(_ tag: String) -> some View {
+        let tagColor = DooStyle.tagColor(for: tag, settings: settings)
+        let bgColor = tagColor ?? DooStyle.tagBg
+        let textColor = tagColor.flatMap { _ in
+            if let hex = settings.tagColors[tag] {
+                return DooStyle.contrastColor(for: hex)
+            }
+            return nil
+        } ?? DooStyle.textPrimary
+
+        return HStack(spacing: 2) {
+            Text(tag).font(.caption)
+            Button {
+                removeTag(tag)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.caption2)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, DooStyle.Spacing.sm - 2)
+        .padding(.vertical, DooStyle.Spacing.xs)
+        .background(bgColor)
+        .foregroundStyle(textColor)
+        .clipShape(Capsule())
     }
 
     private func addTag() {
